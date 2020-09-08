@@ -1,0 +1,22 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
+    implementation "com.google.dagger:dagger:$library.dagger"
+    kapt "com.google.dagger:dagger-compiler:$library.dagger"
+    implementation "com.squareup.retrofit2:retrofit:$library.retrofit"
+    implementation "com.google.code.gson:gson:$library.gson"
+    implementation "com.squareup.retrofit2:converter-gson:$library.convertergson"
+
+    implementation project(":libraries:datasource")
+    implementation project(":libraries:sharedpreferences")
+    implementation project(":libraries:coroutines")
+    implementation project(":libraries:mapper")
+    implementation project(":libraries:androidcore")
+    implementation project(":libraries:dependencyinjection")
+
+}
