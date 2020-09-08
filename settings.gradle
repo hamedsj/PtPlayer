@@ -1,3 +1,5 @@
+include ':libraries:networking'
+include ':shared:firebase'
 include ':libraries:coroutines'
 include ':shared:plugins'
 include ':libraries:sharedpreferences'
