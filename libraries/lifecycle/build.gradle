@@ -1,0 +1,13 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$library.lifecycle"
+
+    implementation "com.google.dagger:dagger:$library.dagger"
+
+}

@@ -1,0 +1,13 @@
+include ':libraries:coroutines'
+include ':shared:plugins'
+include ':libraries:sharedpreferences'
+include ':libraries:dealer'
+include ':libraries:navigation'
+include ':libraries:lifecycle'
+include ':libraries:sdkextentions'
+include ':libraries:mapper'
+include ':libraries:datasource'
+include ':libraries:dependencyinjection'
+include ':libraries:androidcore'
+include ':app'
+rootProject.name = "PtPlayer"

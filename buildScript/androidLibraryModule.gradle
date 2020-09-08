@@ -1,0 +1,44 @@
+subprojects {
+    afterEvaluate { project ->
+        if (project.getPlugins().hasPlugin('com.android.library')) {
+            android {
+                compileSdkVersion build.compileSdkVersion
+                buildToolsVersion build.buildToolsVersion
+                defaultConfig {
+                    minSdkVersion build.minSdkVersion
+                    targetSdkVersion build.targetSdkVersion
+                    versionCode app.versionCode
+                    versionName app.versionName
+                    consumerProguardFiles 'consumer-rules.pro'
+                }
+                buildTypes {
+                    release {
+                        minifyEnabled true
+                        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                    }
+                    debug {
+                        minifyEnabled false
+                        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                    }
+                }
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
+                }
+                kotlinOptions {
+                    jvmTarget = "1.8"
+                }
+                if (project.getPlugins().hasPlugin('kotlin-kapt')) {
+                    kapt {
+                        generateStubs = true
+                    }
+                }
+                if (project.getPlugins().hasPlugin('kotlin-android-extensions')) {
+                    androidExtensions {
+                        experimental = true
+                    }
+                }
+            }
+        }
+    }
+}
