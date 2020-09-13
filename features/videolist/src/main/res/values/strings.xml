@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all">ALL</string>
+    <string name="deeplink_video_list">pt://videolist</string>
+</resources>

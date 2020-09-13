@@ -1,0 +1,29 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
+    implementation "androidx.core:core-ktx:$library.core"
+    implementation "androidx.appcompat:appcompat:$library.appcompat"
+    implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
+    implementation "androidx.navigation:navigation-fragment-ktx:$library.navigation"
+    implementation "androidx.navigation:navigation-ui-ktx:$library.navigation"
+    implementation "androidx.fragment:fragment-ktx:$library.fragment"
+
+    implementation "com.airbnb.android:epoxy:$library.epoxy"
+    kapt "com.airbnb.android:epoxy-processor:$library.epoxy"
+
+    implementation "com.google.dagger:dagger:$library.dagger"
+    kapt "com.google.dagger:dagger-compiler:$library.dagger"
+
+    implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:datasource")
+    implementation project(":libraries:mvi")
+    implementation project(":libraries:lifecycle")
+    implementation project(":libraries:androidcore")
+    implementation project(":shared:design")
+
+}
