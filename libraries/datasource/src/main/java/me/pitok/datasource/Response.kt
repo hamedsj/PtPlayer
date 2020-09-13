@@ -1,4 +1,4 @@
-package me.pitok.networking
+package me.pitok.datasource
 
 sealed class Response<out V, out E>
 
