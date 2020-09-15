@@ -14,21 +14,32 @@ import kotlinx.coroutines.withContext
 import me.pitok.datasource.ifSuccessful
 import me.pitok.lifecycle.update
 import me.pitok.mvi.MviModel
+import me.pitok.videolist.datasource.FolderVideosReadType
 import me.pitok.videolist.datasource.VideoFoldersReadType
 import me.pitok.videolist.entities.FileEntity
+import me.pitok.videolist.entities.FileEntity.Companion.FILE_TYPE
 import me.pitok.videolist.entities.FileEntity.Companion.FOLDER_TYPE
 import me.pitok.videolist.intents.VideoListIntent
+import me.pitok.videolist.requests.FolderVideosRequest
 import me.pitok.videolist.states.VideoListState
 import javax.inject.Inject
 
 class VideoListViewModel @Inject constructor(
-    private val videoFoldersReader: VideoFoldersReadType
+    private val videoFoldersReader: VideoFoldersReadType,
+    private val folderVideosReader: FolderVideosReadType,
 ): ViewModel(), MviModel<VideoListState,VideoListIntent> {
+
+    companion object{
+        const val ALL_FOLDER_DEPTH = 0
+        const val SUB_FOLDER_DEPTH = 1
+    }
 
     override val intents: Channel<VideoListIntent> = Channel(Channel.UNLIMITED)
     private val pState = MutableLiveData<VideoListState>().apply { value = VideoListState() }
     override val state: LiveData<VideoListState>
         get() = pState
+
+    var depth = ALL_FOLDER_DEPTH
 
     init {
         handleIntent()
@@ -42,6 +53,18 @@ class VideoListViewModel @Inject constructor(
                         getFolders(
                             requireNotNull(videoListIntent.contentResolver)
                         )
+                        depth = ALL_FOLDER_DEPTH
+                    }
+                    is VideoListIntent.FetchFolderVideos -> {
+                        getFolderVideos(
+                            videoListIntent.path,
+                            requireNotNull(videoListIntent.contentResolver)
+                        )
+                        depth = SUB_FOLDER_DEPTH
+                    }
+                    is VideoListIntent.ClearVideoList -> {
+                        clearVideoList()
+                        depth = ALL_FOLDER_DEPTH
                     }
                 }
             }
@@ -69,10 +92,41 @@ class VideoListViewModel @Inject constructor(
                                 )
                             )
                         }
-                        copy(items = res)
+                        copy(items = res, sub_folder = false)
                     }
                 }
             }
+        }
+    }
+
+    private fun getFolderVideos(path: String, contentResolver: ContentResolver){
+        viewModelScope.launch(Dispatchers.IO) {
+            folderVideosReader.read(FolderVideosRequest(path, contentResolver))
+                .ifSuccessful { videos ->
+                    withContext(Dispatchers.Main){
+                        pState.update {
+                            val res = mutableListOf<FileEntity>()
+                            videos.forEach{video ->
+                                val videoPathSplited = video.split("/")
+                                val videoName = videoPathSplited[videoPathSplited.size-1]
+                                res.add(
+                                    FileEntity(
+                                        video,
+                                        FILE_TYPE,
+                                        videoName
+                                    )
+                                )
+                            }
+                            copy(items = res, sub_folder = true)
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun clearVideoList(){
+        pState.update {
+            copy(items = listOf(), sub_folder = false)
         }
     }
 }

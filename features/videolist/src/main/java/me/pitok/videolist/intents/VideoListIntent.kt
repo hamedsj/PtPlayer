@@ -6,5 +6,7 @@ import me.pitok.mvi.MviIntent
 sealed class VideoListIntent(val contentResolver: ContentResolver? = null,
                              val path: String = ""): MviIntent {
     class FetchFolders(contentResolver: ContentResolver) : VideoListIntent(contentResolver)
-    class FetchFolderVideos(folderPath: String) : VideoListIntent(path = folderPath)
+    class FetchFolderVideos(contentResolver: ContentResolver,
+                            folderPath: String) : VideoListIntent(contentResolver, folderPath)
+    object ClearVideoList: VideoListIntent()
 }
