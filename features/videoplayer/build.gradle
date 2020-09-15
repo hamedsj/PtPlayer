@@ -1,0 +1,22 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
+    implementation "androidx.appcompat:appcompat:$library.appcompat"
+    implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$library.lifecycle"
+
+    implementation "com.google.android.exoplayer:exoplayer:$library.exoplayer"
+
+    implementation "com.airbnb.android:lottie:$library.lottie"
+    implementation "com.google.android.material:material:$library.material"
+
+    implementation project(":libraries:dependencyinjection")
+    implementation project(":shared:design")
+}
