@@ -32,6 +32,8 @@ ext {
             lifecycle : '2.2.0',
 //            room: '2.2.5',
             epoxy: '4.0.0-beta6',
+            roundedimageview: '2.3.0',
+            coil: '0.13.0',
 //            supportcompat: '28.0.0',
 //            easingyoyo: '2.0@aar',
 //            animationsyoyo: '2.3@aar',
