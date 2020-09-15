@@ -20,14 +20,16 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0">
 
-        <androidx.appcompat.widget.AppCompatImageView
+        <com.makeramen.roundedimageview.RoundedImageView
             android:id="@+id/itemVideoListIcon"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|top"
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
             android:adjustViewBounds="true"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_horizontal|top"
             android:src="@drawable/ic_folder"
-            android:tint="@color/color_primary_light" />
+            tools:tint="@color/color_primary_light" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/itemVideoListName"
@@ -37,6 +39,7 @@
             android:ellipsize="end"
             android:fontFamily="@font/robotoslab_regular"
             android:gravity="center_horizontal"
+            android:layout_marginTop="8dp"
             android:maxLines="3"
             android:textColor="@color/colorPrimaryLightText"
             tools:text="@tools:sample/full_names" />
