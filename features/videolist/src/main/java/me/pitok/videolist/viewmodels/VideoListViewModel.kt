@@ -92,7 +92,7 @@ class VideoListViewModel @Inject constructor(
                                 )
                             )
                         }
-                        copy(items = res, sub_folder = false)
+                        copy(items = res, sub_folder = false, title = "ALL")
                     }
                 }
             }
@@ -103,6 +103,8 @@ class VideoListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             folderVideosReader.read(FolderVideosRequest(path, contentResolver))
                 .ifSuccessful { videos ->
+                    val pathSplited = path.split("/")
+                    val folderName = pathSplited[pathSplited.size-1]
                     withContext(Dispatchers.Main){
                         pState.update {
                             val res = mutableListOf<FileEntity>()
@@ -117,7 +119,10 @@ class VideoListViewModel @Inject constructor(
                                     )
                                 )
                             }
-                            copy(items = res, sub_folder = true)
+                            copy(items = res,
+                                sub_folder = true,
+                                title = folderName
+                            )
                         }
                     }
                 }
