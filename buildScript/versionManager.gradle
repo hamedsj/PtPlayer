@@ -17,7 +17,7 @@ ext {
             recyclerview : "1.1.0",
             fragment : "1.2.5",
             appcompat: "1.2.0",
-//            material: "1.2.0",
+            material: "1.2.1",
             constraintlayout: "2.0.1",
             dagger : "2.27",
             retrofit : "2.8.1",
@@ -34,10 +34,11 @@ ext {
             epoxy: '4.0.0-beta6',
             roundedimageview: '2.3.0',
             coil: '0.13.0',
+            exoplayer: '2.11.7',
 //            supportcompat: '28.0.0',
 //            easingyoyo: '2.0@aar',
 //            animationsyoyo: '2.3@aar',
-//            lottie: '3.4.0',
+            lottie: '3.4.0',
 //            multidex: '2.0.1'
     ]
 }

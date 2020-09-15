@@ -5,5 +5,5 @@ apply plugin: 'kotlin-android-extensions'
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
-
+    implementation "com.google.android.material:material:$library.material"
 }

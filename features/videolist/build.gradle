@@ -32,5 +32,6 @@ dependencies {
     implementation project(":libraries:lifecycle")
     implementation project(":libraries:mvi")
     implementation project(":shared:design")
+    implementation project(":features:videoplayer")
 
 }
