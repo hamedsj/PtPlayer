@@ -1,3 +1,4 @@
+include ':libraries:videometadata'
 include ':libraries:mvi'
 include ':features:videolist'
 include ':shared:design'
