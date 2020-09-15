@@ -12,6 +12,8 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$library.navigation"
     implementation "androidx.navigation:navigation-ui-ktx:$library.navigation"
     implementation "androidx.fragment:fragment-ktx:$library.fragment"
+    implementation "com.makeramen:roundedimageview:$library.roundedimageview"
+
 
     implementation "com.airbnb.android:epoxy:$library.epoxy"
     kapt "com.airbnb.android:epoxy-processor:$library.epoxy"
@@ -19,11 +21,16 @@ dependencies {
     implementation "com.google.dagger:dagger:$library.dagger"
     kapt "com.google.dagger:dagger-compiler:$library.dagger"
 
+    implementation "io.coil-kt:coil-video:$library.coil"
+    implementation "io.coil-kt:coil:$library.coil"
+
     implementation project(":libraries:dependencyinjection")
-    implementation project(":libraries:datasource")
-    implementation project(":libraries:mvi")
-    implementation project(":libraries:lifecycle")
+    implementation project(":libraries:videometadata")
+    implementation project(":libraries:sdkextentions")
     implementation project(":libraries:androidcore")
+    implementation project(":libraries:datasource")
+    implementation project(":libraries:lifecycle")
+    implementation project(":libraries:mvi")
     implementation project(":shared:design")
 
 }

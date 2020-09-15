@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.ImageLoader
 import kotlinx.android.synthetic.main.fragment_video_list.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.lifecycle.ViewModelFactory
@@ -28,6 +29,10 @@ import me.pitok.videolist.viewmodels.VideoListViewModel
 import javax.inject.Inject
 
 class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoListState> {
+
+    companion object{
+        const val ANIMATION_DURATION = 100L
+    }
 
     private lateinit var videoListEpoxyController: VideoListController
 
@@ -96,6 +101,7 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
         when(type) {
             FileEntity.FOLDER_TYPE -> {
                 lifecycleScope.launch {
+                    delay(ANIMATION_DURATION)
                     videoListViewModel.intents.send(
                         VideoListIntent.FetchFolderVideos(
                             folderPath = path,
@@ -116,6 +122,7 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
         videoListEpoxyController.items = state.items
         videoListEpoxyController.requestModelBuild()
         (videoListRv.layoutManager as GridLayoutManager).spanCount = if (state.sub_folder) 2 else 3
+        videoListTitle.text = state.title
     }
 
     private fun checkStoragePermissions(): Boolean {
