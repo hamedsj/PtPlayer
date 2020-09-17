@@ -1,11 +1,13 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
     implementation "androidx.appcompat:appcompat:$library.appcompat"
+    implementation "androidx.activity:activity-ktx:$library.activity"
     implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
 
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$library.lifecycle"
@@ -14,9 +16,18 @@ dependencies {
 
     implementation "com.google.android.exoplayer:exoplayer:$library.exoplayer"
 
+    implementation "com.google.dagger:dagger:$library.dagger"
+    kapt "com.google.dagger:dagger-compiler:$library.dagger"
+
     implementation "com.airbnb.android:lottie:$library.lottie"
     implementation "com.google.android.material:material:$library.material"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:videometadata")
+    implementation project(":libraries:androidcore")
+    implementation project(":libraries:datasource")
+    implementation project(":libraries:lifecycle")
+    implementation project(":libraries:logger")
     implementation project(":shared:design")
+    implementation project(":shared:player")
 }
