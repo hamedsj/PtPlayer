@@ -1,9 +1,8 @@
-package me.pitok.videolist.datasource
+package me.pitok.videometadata.datasource
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.provider.MediaStore
-import android.util.Log
 import me.pitok.datasource.Failure
 import me.pitok.datasource.Readable
 import me.pitok.datasource.Response
