@@ -1,3 +1,5 @@
+include ':libraries:logger'
+include ':shared:player'
 include ':features:videoplayer'
 include ':libraries:videometadata'
 include ':libraries:mvi'

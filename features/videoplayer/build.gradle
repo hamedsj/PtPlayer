@@ -28,6 +28,7 @@ dependencies {
     implementation project(":libraries:datasource")
     implementation project(":libraries:lifecycle")
     implementation project(":libraries:logger")
+    implementation project(":libraries:mvi")
     implementation project(":shared:design")
     implementation project(":shared:player")
 }
