@@ -1,4 +1,4 @@
-package me.pitok.videometadata.di
+package me.pitok.videometadata.di.modules
 
 import android.content.Context
 import android.media.MediaMetadataRetriever

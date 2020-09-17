@@ -1,4 +1,4 @@
-package me.pitok.videolist.requests
+package me.pitok.videometadata.requests
 
 import android.content.ContentResolver
 

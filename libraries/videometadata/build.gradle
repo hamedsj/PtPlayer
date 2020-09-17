@@ -13,6 +13,7 @@ dependencies {
     implementation "io.coil-kt:coil:$library.coil"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:datasource")
     implementation project(":libraries:androidcore")
 
 }
