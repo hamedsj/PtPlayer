@@ -1,14 +1,12 @@
-package me.pitok.videolist.datasource
+package me.pitok.videometadata.datasource
 
 import android.annotation.SuppressLint
-import android.content.ContentResolver
 import android.provider.MediaStore
-import android.util.Log
 import me.pitok.datasource.Failure
 import me.pitok.datasource.Readable
 import me.pitok.datasource.Response
 import me.pitok.datasource.Success
-import me.pitok.videolist.requests.FolderVideosRequest
+import me.pitok.videometadata.requests.FolderVideosRequest
 import javax.inject.Inject
 
 class FolderVideosReader @Inject constructor(): FolderVideosReadType{
