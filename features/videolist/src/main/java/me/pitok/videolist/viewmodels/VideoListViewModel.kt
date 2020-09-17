@@ -14,14 +14,14 @@ import kotlinx.coroutines.withContext
 import me.pitok.datasource.ifSuccessful
 import me.pitok.lifecycle.update
 import me.pitok.mvi.MviModel
-import me.pitok.videolist.datasource.FolderVideosReadType
-import me.pitok.videolist.datasource.VideoFoldersReadType
 import me.pitok.videolist.entities.FileEntity
 import me.pitok.videolist.entities.FileEntity.Companion.FILE_TYPE
 import me.pitok.videolist.entities.FileEntity.Companion.FOLDER_TYPE
 import me.pitok.videolist.intents.VideoListIntent
-import me.pitok.videolist.requests.FolderVideosRequest
 import me.pitok.videolist.states.VideoListState
+import me.pitok.videometadata.datasource.FolderVideosReadType
+import me.pitok.videometadata.datasource.VideoFoldersReadType
+import me.pitok.videometadata.requests.FolderVideosRequest
 import javax.inject.Inject
 
 class VideoListViewModel @Inject constructor(

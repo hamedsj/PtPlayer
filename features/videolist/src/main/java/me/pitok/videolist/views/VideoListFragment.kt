@@ -2,6 +2,7 @@ package me.pitok.videolist.views
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -14,8 +15,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.ImageLoader
 import kotlinx.android.synthetic.main.fragment_video_list.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.mvi.MviView
@@ -26,6 +29,7 @@ import me.pitok.videolist.entities.FileEntity
 import me.pitok.videolist.intents.VideoListIntent
 import me.pitok.videolist.states.VideoListState
 import me.pitok.videolist.viewmodels.VideoListViewModel
+import me.pitok.videoplayer.views.VideoPlayerActivity
 import javax.inject.Inject
 
 class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoListState> {
@@ -113,7 +117,19 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
                 }
             }
             FileEntity.FILE_TYPE -> {
-
+                lifecycleScope.launch {
+                    delay(ANIMATION_DURATION)
+                    withContext(Dispatchers.Main){
+                        Intent(requireActivity(), VideoPlayerActivity::class.java).apply {
+                            putExtra(
+                                VideoPlayerActivity.DATA_SOURCE_TYPE_KEY,
+                                VideoPlayerActivity.PATH_DATA_TYPE
+                            )
+                            putExtra(VideoPlayerActivity.DATA_SOURCE_KEY, path)
+                            startActivity(this)
+                        }
+                    }
+                }
             }
         }
     }
