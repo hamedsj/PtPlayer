@@ -36,6 +36,7 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
 
     companion object{
         const val ANIMATION_DURATION = 100L
+        const val CHANGE_ACTIVITY_DELAY_DURATION = 150L
     }
 
     private lateinit var videoListEpoxyController: VideoListController
@@ -118,7 +119,7 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
             }
             FileEntity.FILE_TYPE -> {
                 lifecycleScope.launch {
-                    delay(ANIMATION_DURATION)
+                    delay(ANIMATION_DURATION + CHANGE_ACTIVITY_DELAY_DURATION)
                     withContext(Dispatchers.Main){
                         Intent(requireActivity(), VideoPlayerActivity::class.java).apply {
                             putExtra(

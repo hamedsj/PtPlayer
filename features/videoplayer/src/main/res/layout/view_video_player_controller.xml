@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/videoPlayerController"
+    android:background="@android:color/transparent"
     tools:background="@android:color/black"
     >
 
@@ -22,6 +23,8 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/videoPlayerControllerPlayIc"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:padding="8dp"
