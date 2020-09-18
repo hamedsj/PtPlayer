@@ -22,6 +22,8 @@ dependencies {
     implementation "com.airbnb.android:lottie:$library.lottie"
     implementation "com.google.android.material:material:$library.material"
 
+    implementation "io.reactivex.rxjava3:rxandroid:$library.rxandroid"
+
     implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:videometadata")
     implementation project(":libraries:androidcore")
