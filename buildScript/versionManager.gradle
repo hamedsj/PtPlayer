@@ -36,6 +36,7 @@ ext {
             roundedimageview: '2.3.0',
             coil: '0.13.0',
             exoplayer: '2.11.7',
+            rxandroid: '3.0.0',
 //            supportcompat: '28.0.0',
 //            easingyoyo: '2.0@aar',
 //            animationsyoyo: '2.3@aar',
