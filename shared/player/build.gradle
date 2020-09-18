@@ -11,6 +11,7 @@ dependencies {
 
     implementation "com.google.dagger:dagger:$library.dagger"
     kapt "com.google.dagger:dagger-compiler:$library.dagger"
+    implementation "io.reactivex.rxjava3:rxandroid:$library.rxandroid"
 
     implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:androidcore")

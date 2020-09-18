@@ -10,6 +10,7 @@ import dagger.Module
 import dagger.Provides
 import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.dependencyinjection.shared.SharedScope
+import me.pitok.player.di.IndictableSimpleExoPlayer
 
 @Module
 class PlayerModule {
@@ -32,8 +33,8 @@ class PlayerModule {
 
     @Provides
     @SharedScope
-    fun provideExoPlayer(@ApplicationContext context: Context): SimpleExoPlayer{
-        return SimpleExoPlayer.Builder(context).build()
+    fun provideExoPlayer(@ApplicationContext context: Context): IndictableSimpleExoPlayer{
+        return IndictableSimpleExoPlayer(context)
     }
 
 
