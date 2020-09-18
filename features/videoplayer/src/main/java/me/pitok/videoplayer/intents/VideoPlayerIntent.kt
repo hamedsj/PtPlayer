@@ -5,4 +5,12 @@ import me.pitok.videoplayer.states.PlaybackState
 
 sealed class VideoPlayerIntent(): MviIntent {
     class SetPlayBackState(val playbackState: PlaybackState): VideoPlayerIntent()
+    class SendCommand(val command: PlayerControllerCommmand): VideoPlayerIntent()
+}
+
+sealed class PlayerControllerCommmand{
+    object Next: PlayerControllerCommmand()
+    object Previous: PlayerControllerCommmand()
+    object Play: PlayerControllerCommmand()
+    object Pause: PlayerControllerCommmand()
 }

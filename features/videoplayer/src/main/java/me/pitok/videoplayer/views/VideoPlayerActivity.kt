@@ -11,16 +11,21 @@ import androidx.core.animation.doOnEnd
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
 import kotlinx.android.synthetic.main.view_video_player_controller.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
+import me.pitok.player.di.IndictableSimpleExoPlayer
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
+import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
+import me.pitok.videoplayer.states.PLayerCommand
 import me.pitok.videoplayer.states.PlaybackState
 import me.pitok.videoplayer.states.VideoPlayerState
 import me.pitok.videoplayer.viewmodels.VideoPlayerViewModel
@@ -40,7 +45,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     lateinit var viewModelFactory: ViewModelFactory
 
     @Inject
-    lateinit var exoPlayer: SimpleExoPlayer
+    lateinit var exoPlayer: IndictableSimpleExoPlayer
+
+    private var sliderInTouch = false
 
     private val videoPlayerViewModel: VideoPlayerViewModel by viewModels { viewModelFactory }
 
@@ -48,21 +55,65 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
         VideoPlayerComponentBuilder.getComponent().inject(this)
-        setFullScreen(true)
         getInitialData()
         setInitialViews()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
-        videoPlayerPv.setOnClickListener(::onControllerToggle)
         videoPlayerControllerHighlight.setOnClickListener(::onControllerToggle)
         videoPlayerControllerPlayIc.setOnClickListener(::onPlayIcClick)
+        videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
+        videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
         exoPlayer.prepare(videoPlayerViewModel.buildVideoSource())
         exoPlayer.addListener(this)
+        exoPlayer.onPositionChanged = {position ->
+            onProgressChanged(position.toFloat())
+        }
+        videoPlayerControllerSeekbar.addOnSliderTouchListener(object: Slider.OnSliderTouchListener{
+            override fun onStartTrackingTouch(slider: Slider) {
+                sliderInTouch = true
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                sliderInTouch = false
+                exoPlayer.seekTo(slider.value.toLong())
+            }
+
+        })
+    }
+
+    private fun onProgressChanged(position: Float){
+        if (sliderInTouch) return
+        videoPlayerControllerSeekbar.apply {
+            value = if (position >= valueTo) valueTo else position
+        }
     }
 
     private fun onPlayIcClick(view: View) {
-        exoPlayer.playWhenReady = exoPlayer.playWhenReady.not()
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SendCommand(
+                    if (exoPlayer.playWhenReady) PlayerControllerCommmand.Pause
+                    else PlayerControllerCommmand.Play
+                )
+            )
+        }
+    }
+
+    private fun onNextIcClick(view: View) {
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Next)
+            )
+        }
+    }
+
+    private fun onBackIcClick(view: View) {
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Previous)
+            )
+        }
     }
 
     private fun getInitialData() {
@@ -76,7 +127,8 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         when(videoPlayerViewModel.datasourcetype){
             PATH_DATA_TYPE -> {
                 intent.getStringExtra(DATA_SOURCE_KEY)?.run{
-                    videoPlayerViewModel.path = this
+                    videoPlayerViewModel.activePath = this
+                    videoPlayerViewModel.getFolderVideos(contentResolver)
                 }?:run{
                     Logger.e("video path not found")
                     finish()
@@ -90,6 +142,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun setInitialViews() {
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
         videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
     }
 
@@ -99,39 +155,50 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 videoPlayerController,
                 "alpha",
                 videoPlayerController.alpha,
-                0f)
+                0f
+            )
             fadeOutObjectAnimator.interpolator = LinearInterpolator()
             fadeOutObjectAnimator.duration = CONTROLLER_FADE_IN_ANIM_DURATION
             fadeOutObjectAnimator.doOnEnd {
                 setPlaybackButtonsVisibility(visible = false)
+                setFullScreen(false)
             }
             fadeOutObjectAnimator.start()
-            setFullScreen(false)
         }else{
             val fadeInObjectAnimator = ObjectAnimator.ofFloat(
                 videoPlayerController,
                 "alpha",
                 videoPlayerController.alpha,
-                1f)
+                1f
+            )
             fadeInObjectAnimator.interpolator = LinearInterpolator()
             fadeInObjectAnimator.duration = CONTROLLER_FADE_OUT_ANIM_DURATION
+            fadeInObjectAnimator.doOnEnd {
+                setFullScreen(true)
+            }
             fadeInObjectAnimator.start()
             setPlaybackButtonsVisibility(visible = true)
-            setFullScreen(true)
         }
     }
 
     private fun setFullScreen(enabled: Boolean = true){
         if (enabled){
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window.decorView.systemUiVisibility = View.VISIBLE
         }else{
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            val fullscreenFlags =  (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_FULLSCREEN)
+
+            window.decorView.systemUiVisibility =
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                        (fullscreenFlags or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                    }else {
+                        fullscreenFlags
+                    }
         }
     }
 
@@ -164,9 +231,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun render(state: VideoPlayerState) {
+        Logger.e("render($state)")
         if (state.playback_state is PlaybackState.Buffering){
             videoPlayerLoadingAv.visibility = View.VISIBLE
-        }else{
+        }else if (state.playback_state != null){
             videoPlayerLoadingAv.visibility = View.INVISIBLE
         }
         when(state.playback_state){
@@ -181,6 +249,20 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+            }
+        }
+        when(state.command){
+            is PLayerCommand.Start -> {
+                exoPlayer.playWhenReady = true
+            }
+            is PLayerCommand.Pause -> {
+                exoPlayer.playWhenReady = false
+            }
+            is PLayerCommand.SeekToPosition -> {
+                exoPlayer.seekTo(state.command.position)
+            }
+            is PLayerCommand.Prepare -> {
+                exoPlayer.prepare(state.command.mediaSource)
             }
         }
     }
@@ -202,12 +284,14 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             ExoPlayer.STATE_READY -> {
+                videoPlayerControllerSeekbar.valueFrom = 0f
+                videoPlayerControllerSeekbar.valueTo = exoPlayer.duration.toFloat()
                 lifecycleScope.launch {
                     if (playWhenReady.not()) {
                         videoPlayerViewModel.intents.send(
                             VideoPlayerIntent.SetPlayBackState(PlaybackState.ReadyAndStoped)
                         )
-                    }else {
+                    } else {
                         videoPlayerViewModel.intents.send(
                             VideoPlayerIntent.SetPlayBackState(PlaybackState.Playing)
                         )
