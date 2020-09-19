@@ -3,8 +3,16 @@
     <application
         android:theme="@style/AppTheme">
         <activity
+            android:launchMode="singleInstance"
             android:theme="@style/VideoPlayerTheme"
             android:name="me.pitok.videoplayer.views.VideoPlayerActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content"/>
+                <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
