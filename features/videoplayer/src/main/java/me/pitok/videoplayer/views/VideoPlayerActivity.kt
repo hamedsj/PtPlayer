@@ -10,9 +10,12 @@ import android.view.View
 import android.view.WindowManager
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
+import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
+import androidx.core.net.toFile
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -219,6 +222,21 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun getInitialData() {
+        if (intent.action != null){
+            try {
+                videoPlayerViewModel.datasourcetype = PATH_DATA_TYPE
+                if (intent.data?.scheme == "content"){
+                    videoPlayerViewModel.activePath = videoPlayerViewModel.getRealPathFromURI(contentResolver,intent.data)
+                }
+                Logger.v("${videoPlayerViewModel.activePath}")
+                videoPlayerViewModel.getFolderVideos(contentResolver)
+            }catch (e: Exception){
+                Toast.makeText(context,"PtPlayer cannot play this file",Toast.LENGTH_LONG).show()
+                Logger.e(e.message)
+                finish()
+            }
+            return
+        }
         try {
             videoPlayerViewModel.datasourcetype =
                 requireNotNull(intent.getStringExtra(DATA_SOURCE_TYPE_KEY))
