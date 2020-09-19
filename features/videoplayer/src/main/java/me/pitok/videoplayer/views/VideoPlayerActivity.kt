@@ -1,9 +1,14 @@
 package me.pitok.videoplayer.views
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,10 +22,13 @@ import kotlinx.android.synthetic.main.view_video_player_controller.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
 import me.pitok.player.di.IndictableSimpleExoPlayer
+import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
@@ -37,8 +45,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val DATA_SOURCE_KEY = "datasource"
         const val DATA_SOURCE_TYPE_KEY = "datasourcetype"
         const val PATH_DATA_TYPE = "path"
-        const val CONTROLLER_FADE_IN_ANIM_DURATION = 150L
-        const val CONTROLLER_FADE_OUT_ANIM_DURATION = 250L
+        const val FADE_IN_ANIM_DURATION = 150L
+        const val FADE_OUT_ANIM_DURATION = 250L
+        const val CHANGE_POSITION_ANIMATION_DURATION = 250L
     }
 
     @Inject
@@ -46,6 +55,11 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     @Inject
     lateinit var exoPlayer: IndictableSimpleExoPlayer
+
+    @ApplicationContext
+    @Inject
+    lateinit var context: Context
+
 
     private var sliderInTouch = false
 
@@ -57,8 +71,30 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         VideoPlayerComponentBuilder.getComponent().inject(this)
         getInitialData()
         setInitialViews()
+        val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
-        videoPlayerControllerHighlight.setOnClickListener(::onControllerToggle)
+        videoPlayerControllerHighlight.setOnTouchListener(object: View.OnTouchListener{
+            private val gestureDetector = GestureDetector(context,object:
+                GestureDetector.SimpleOnGestureListener() {
+                override fun onDoubleTap(e: MotionEvent?): Boolean {
+                    if (requireNotNull(e?.x) >=  screenWidth/2f){
+                        onFastForwardTapped()
+                    }else{
+                        onRewindTapped()
+                    }
+                    return super.onDoubleTap(e)
+                }
+                override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                    onControllerToggle()
+                    return super.onSingleTapConfirmed(e)
+                }
+            })
+            @SuppressLint("ClickableViewAccessibility")
+            override fun onTouch(p0: View?, p1: MotionEvent?): Boolean {
+                gestureDetector.onTouchEvent(p1)
+                return true
+            }
+        })
         videoPlayerControllerPlayIc.setOnClickListener(::onPlayIcClick)
         videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
         videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
@@ -80,6 +116,72 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
 
         })
+    }
+
+    private fun onFastForwardTapped(){
+        if (exoPlayer.contentPosition >= (exoPlayer.duration-10000))
+            exoPlayer.seekTo(exoPlayer.duration - 500)
+        else
+            exoPlayer.seekTo(exoPlayer.currentPosition + 10000)
+
+        val fadeInObjectAnimator = ObjectAnimator.ofFloat(
+            videoPlayerFastForwardHighlight,
+            "alpha",
+            videoPlayerFastForwardHighlight.alpha,
+            1f
+        )
+        fadeInObjectAnimator.interpolator = AccelerateInterpolator()
+        fadeInObjectAnimator.duration = FADE_IN_ANIM_DURATION
+        fadeInObjectAnimator.doOnEnd {
+            lifecycleScope.launch {
+                delay(CHANGE_POSITION_ANIMATION_DURATION)
+                withContext(Dispatchers.Main){
+                    val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
+                        videoPlayerFastForwardHighlight,
+                        "alpha",
+                        videoPlayerFastForwardHighlight.alpha,
+                        0f
+                    )
+                    fadeOutObjectAnimator.interpolator = AccelerateInterpolator()
+                    fadeOutObjectAnimator.duration = FADE_OUT_ANIM_DURATION
+                    fadeOutObjectAnimator.start()
+                }
+            }
+        }
+        fadeInObjectAnimator.start()
+    }
+
+    private fun onRewindTapped(){
+        if (exoPlayer.contentPosition <= (10000))
+            exoPlayer.seekTo(0L)
+        else
+            exoPlayer.seekTo(exoPlayer.currentPosition - 10000)
+
+        val fadeInObjectAnimator = ObjectAnimator.ofFloat(
+            videoPlayerRewindHighlight,
+            "alpha",
+            videoPlayerRewindHighlight.alpha,
+            1f
+        )
+        fadeInObjectAnimator.interpolator = AccelerateInterpolator()
+        fadeInObjectAnimator.duration = FADE_IN_ANIM_DURATION
+        fadeInObjectAnimator.doOnEnd {
+            lifecycleScope.launch {
+                delay(CHANGE_POSITION_ANIMATION_DURATION)
+                withContext(Dispatchers.Main){
+                    val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
+                        videoPlayerRewindHighlight,
+                        "alpha",
+                        videoPlayerRewindHighlight.alpha,
+                        0f
+                    )
+                    fadeOutObjectAnimator.interpolator = AccelerateInterpolator()
+                    fadeOutObjectAnimator.duration = FADE_OUT_ANIM_DURATION
+                    fadeOutObjectAnimator.start()
+                }
+            }
+        }
+        fadeInObjectAnimator.start()
     }
 
     private fun onProgressChanged(position: Float){
@@ -149,7 +251,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
     }
 
-    private fun onControllerToggle(view: View?){
+    private fun onControllerToggle(){
         if (videoPlayerController.alpha != 0f){
             val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
                 videoPlayerController,
@@ -158,7 +260,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 0f
             )
             fadeOutObjectAnimator.interpolator = LinearInterpolator()
-            fadeOutObjectAnimator.duration = CONTROLLER_FADE_IN_ANIM_DURATION
+            fadeOutObjectAnimator.duration = FADE_IN_ANIM_DURATION
             fadeOutObjectAnimator.doOnEnd {
                 setPlaybackButtonsVisibility(visible = false)
                 setFullScreen(false)
@@ -172,7 +274,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 1f
             )
             fadeInObjectAnimator.interpolator = LinearInterpolator()
-            fadeInObjectAnimator.duration = CONTROLLER_FADE_OUT_ANIM_DURATION
+            fadeInObjectAnimator.duration = FADE_OUT_ANIM_DURATION
             fadeInObjectAnimator.doOnEnd {
                 setFullScreen(true)
             }
