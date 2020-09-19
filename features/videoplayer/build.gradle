@@ -25,6 +25,7 @@ dependencies {
     implementation "io.reactivex.rxjava3:rxandroid:$library.rxandroid"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:sdkextentions")
     implementation project(":libraries:videometadata")
     implementation project(":libraries:androidcore")
     implementation project(":libraries:datasource")
