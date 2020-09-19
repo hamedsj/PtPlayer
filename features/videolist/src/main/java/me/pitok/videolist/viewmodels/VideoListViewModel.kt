@@ -4,13 +4,10 @@ import android.content.ContentResolver
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import me.pitok.datasource.ifSuccessful
 import me.pitok.lifecycle.update
 import me.pitok.mvi.MviModel
@@ -23,6 +20,7 @@ import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.datasource.VideoFoldersReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
 class VideoListViewModel @Inject constructor(
     private val videoFoldersReader: VideoFoldersReadType,
@@ -41,12 +39,15 @@ class VideoListViewModel @Inject constructor(
 
     var depth = ALL_FOLDER_DEPTH
 
+    private var job1 : CoroutineContext? = null
+    private var job2 : CoroutineContext? = null
+
     init {
         handleIntent()
     }
 
     private fun handleIntent(){
-        viewModelScope.launch {
+        GlobalScope.launch(NonCancellable) {
             intents.consumeAsFlow().collect {videoListIntent ->
                 when(videoListIntent){
                     is VideoListIntent.FetchFolders -> {
@@ -72,7 +73,7 @@ class VideoListViewModel @Inject constructor(
     }
 
     private fun getFolders(contentResolver: ContentResolver){
-        viewModelScope.launch(Dispatchers.IO) {
+        job1 = GlobalScope.launch(Dispatchers.IO) {
             videoFoldersReader.read(contentResolver).ifSuccessful {videos ->
                 withContext(Dispatchers.Main) {
                     pState.update {
@@ -100,7 +101,7 @@ class VideoListViewModel @Inject constructor(
     }
 
     private fun getFolderVideos(path: String, contentResolver: ContentResolver){
-        viewModelScope.launch(Dispatchers.IO) {
+        job2 = GlobalScope.launch(Dispatchers.IO) {
             folderVideosReader.read(FolderVideosRequest(path, contentResolver))
                 .ifSuccessful { videos ->
                     val pathSplited = path.split("/")
@@ -133,5 +134,16 @@ class VideoListViewModel @Inject constructor(
         pState.update {
             copy(items = listOf(), sub_folder = false)
         }
+    }
+
+    /**
+     *  cause viewmodelScope not working with injected viewModels
+     *  we should use GlobalScope and then cancel them in [onCleared()]
+     *
+     */
+    override fun onCleared() {
+        job1?.cancel()
+        job2?.cancel()
+        super.onCleared()
     }
 }

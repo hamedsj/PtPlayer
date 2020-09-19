@@ -15,10 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.ImageLoader
 import kotlinx.android.synthetic.main.fragment_video_list.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.mvi.MviView
@@ -31,6 +28,7 @@ import me.pitok.videolist.states.VideoListState
 import me.pitok.videolist.viewmodels.VideoListViewModel
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
 class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoListState> {
 
