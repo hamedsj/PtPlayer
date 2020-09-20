@@ -119,6 +119,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
 
         })
+        videoPlayerControllerSeekbar.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
+            if (!fromUser) return@OnChangeListener
+            videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(value.toLong())
+        })
     }
 
     private fun onFastForwardTapped(){
@@ -189,6 +193,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     private fun onProgressChanged(position: Float){
         if (sliderInTouch) return
+        videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
         videoPlayerControllerSeekbar.apply {
             value = if (position >= valueTo) valueTo else position
         }
@@ -360,9 +365,13 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         when(state.playback_state){
             is PlaybackState.Playing -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
+                videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
+                videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
             }
             is PlaybackState.ReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
+                videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
             }
             is PlaybackState.Ended -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
@@ -441,6 +450,17 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 )
             )
         }
+    }
+
+    private fun miliSecToFormatedTime(miliSec: Long): String{
+        val durationHourInt = (miliSec / (60*60*1000)).toInt()
+        val durationMinInt = ((miliSec % (60*60*1000))/(60*1000)).toInt()
+        val durationSecInt = ((miliSec % (60*1000))/1000).toInt()
+        val durationHourStr = if (durationHourInt < 10) "0$durationHourInt" else "$durationHourInt"
+        val durationMinStr = if (durationMinInt < 10) "0$durationMinInt" else "$durationMinInt"
+        val durationSecStr = if (durationSecInt < 10) "0$durationSecInt" else "$durationSecInt"
+        return if (durationHourInt != 0) "$durationHourStr:$durationMinStr:$durationSecStr"
+        else "$durationMinStr:$durationSecStr"
     }
 
 }
