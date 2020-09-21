@@ -7,6 +7,7 @@
     <color name="colorPrimaryLightText">@color/color_high_text</color>
     <color name="colorSecondaryText">@color/color_medium_text</color>
     <color name="colorDisabledText">@color/color_disabled_text</color>
+    <color name="colorDivider">@color/white_divider</color>
 
 
     <color name="gray_50">#fafafa</color>
@@ -34,6 +35,7 @@
     <color name="ripple_draw_color">#8FFFFFFF</color>
     <color name="ripple_draw_color_revert">#8F000000</color>
 
+    <color name="white_divider">#1FFFFFFF</color>
 
 
 </resources>
