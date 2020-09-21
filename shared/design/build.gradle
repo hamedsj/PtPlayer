@@ -6,4 +6,6 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
     implementation "com.google.android.material:material:$library.material"
+    implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
+    implementation "androidx.recyclerview:recyclerview:$library.recyclerview"
 }
