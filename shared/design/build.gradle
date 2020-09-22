@@ -8,4 +8,7 @@ dependencies {
     implementation "com.google.android.material:material:$library.material"
     implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
     implementation "androidx.recyclerview:recyclerview:$library.recyclerview"
+
+    implementation project(":libraries:logger")
+    implementation project(":libraries:sdkextentions")
 }
