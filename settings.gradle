@@ -1,3 +1,4 @@
+include ':libraries:subtitle'
 include ':libraries:logger'
 include ':shared:player'
 include ':features:videoplayer'
