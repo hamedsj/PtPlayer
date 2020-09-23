@@ -24,3 +24,8 @@ sealed class PLayerCommand: VideoPlayerState() {
 sealed class OptionsState: VideoPlayerState() {
     object ShowMainMenu: OptionsState()
 }
+
+sealed class SubtitleState: VideoPlayerState() {
+    object Clear: SubtitleState()
+    class Show(val subText: String): SubtitleState()
+}
