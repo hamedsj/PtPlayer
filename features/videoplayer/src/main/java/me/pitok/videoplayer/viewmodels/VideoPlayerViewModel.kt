@@ -19,12 +19,14 @@ import me.pitok.datasource.ifSuccessful
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
+import me.pitok.subtitle.SubtitleEntity
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
 import me.pitok.videoplayer.states.OptionsState
 import me.pitok.videoplayer.states.PLayerCommand
+import me.pitok.videoplayer.states.SubtitleState
 import me.pitok.videoplayer.states.VideoPlayerState
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import java.io.File
@@ -40,6 +42,7 @@ class VideoPlayerViewModel @Inject constructor(
     var activePath : String? = null
     lateinit var datasourcetype: String
     private var videoList = mutableListOf<String>()
+    private val availibleSubtitleList = mutableListOf<SubtitleEntity>()
 
     var resumePosition = 0L
     var resumeWindow = 0
@@ -84,6 +87,17 @@ class VideoPlayerViewModel @Inject constructor(
                                 pState.update {OptionsState.ShowMainMenu}
                             }
                         }
+                    }
+                    is VideoPlayerIntent.SubtitleProgressChanged -> {
+                        getSubtitleContent(videoPlayerIntent.progress)?.apply {
+                                withContext(Dispatchers.Main) {
+                                    pState.update { SubtitleState.Show(content) }
+                                }
+                            } ?: run {
+                                withContext(Dispatchers.Main) {
+                                    pState.update { SubtitleState.Clear }
+                                }
+                            }
                     }
                 }
             }
@@ -153,6 +167,21 @@ class VideoPlayerViewModel @Inject constructor(
         pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath)))}
         pState.update {PLayerCommand.SeekToPosition(0)}
         pState.update {PLayerCommand.Start}
+    }
+
+    private suspend fun getSubtitleContent(currentMiliSec: Long) : SubtitleEntity? {
+        availibleSubtitleList.forEach { subtitleEntity ->
+            if (subtitleEntity.fromMs <= currentMiliSec && subtitleEntity.toMs < currentMiliSec){
+                return subtitleEntity
+            }
+        }
+        if (availibleSubtitleList.last().toMs > currentMiliSec){
+            return null
+        }else if (availibleSubtitleList.last().toMs < currentMiliSec){
+            //todo: load more subtitle
+            return getSubtitleContent(currentMiliSec)
+        }
+        return null
     }
 
     /**

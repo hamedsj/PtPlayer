@@ -36,10 +36,7 @@ import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
-import me.pitok.videoplayer.states.OptionsState
-import me.pitok.videoplayer.states.PLayerCommand
-import me.pitok.videoplayer.states.PlaybackState
-import me.pitok.videoplayer.states.VideoPlayerState
+import me.pitok.videoplayer.states.*
 import me.pitok.videoplayer.viewmodels.VideoPlayerViewModel
 import javax.inject.Inject
 
@@ -200,6 +197,11 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
         videoPlayerControllerSeekbar.apply {
             value = if (position >= valueTo) valueTo else position
+        }
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SubtitleProgressChanged(progress = exoPlayer.currentPosition)
+            )
         }
     }
 
@@ -426,6 +428,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                     )
                     show()
                 }
+            }
+            is SubtitleState.Clear -> {
+                subtitleTv.text = ""
+            }
+            is SubtitleState.Show -> {
+                subtitleTv.text = state.subText
             }
         }
     }

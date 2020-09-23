@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -22,6 +23,8 @@ class BottomSheetView(
     private val bottomSheetRecycler: RecyclerView
 
     var dismissOnClick: Boolean = true
+
+
 
     var sheetTitle: String = ""
         set(value) {
@@ -49,6 +52,7 @@ class BottomSheetView(
         bottomSheetRecycler = view.findViewById(R.id.bottomSheetRecycler)
         bottomSheetRecycler.layoutManager = LinearLayoutManager(context)
         bottomSheetTitle = view.findViewById(R.id.sheetTitle)
+        view.background = ContextCompat.getDrawable(context,R.drawable.shape_bottom_sheet_background)
         setContentView(view)
 
         // fix issue of not showing completely in landscape mode
