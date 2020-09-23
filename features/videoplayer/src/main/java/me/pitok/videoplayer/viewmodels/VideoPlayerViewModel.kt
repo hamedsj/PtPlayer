@@ -23,6 +23,7 @@ import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
+import me.pitok.videoplayer.states.OptionsState
 import me.pitok.videoplayer.states.PLayerCommand
 import me.pitok.videoplayer.states.VideoPlayerState
 import me.pitok.videoplayer.views.VideoPlayerActivity
@@ -59,9 +60,7 @@ class VideoPlayerViewModel @Inject constructor(
             intents.consumeAsFlow().collect { videoPlayerIntent ->
                 when (videoPlayerIntent){
                     is VideoPlayerIntent.SetPlayBackState -> {
-                        pState.update {
-                            copy(playback_state = videoPlayerIntent.playbackState)
-                        }
+                        pState.update {videoPlayerIntent.playbackState}
                     }
                     is VideoPlayerIntent.SendCommand -> {
                         when (videoPlayerIntent.command) {
@@ -72,14 +71,17 @@ class VideoPlayerViewModel @Inject constructor(
                                 startPreviousVideo()
                             }
                             is PlayerControllerCommmand.Play -> {
-                                pState.update {
-                                    copy(command = PLayerCommand.Start)
-                                }
+                                pState.update {PLayerCommand.Start}
                             }
                             is PlayerControllerCommmand.Pause -> {
-                                pState.update {
-                                    copy(command = PLayerCommand.Pause)
-                                }
+                                pState.update {PLayerCommand.Pause}
+                            }
+                        }
+                    }
+                    is VideoPlayerIntent.ShowOptions -> {
+                        when(videoPlayerIntent.OptionsMenu){
+                            VideoPlayerActivity.OPTIONS_MAIN_MENU ->{
+                                pState.update {OptionsState.ShowMainMenu}
                             }
                         }
                     }
@@ -138,11 +140,9 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == videoList.size - 1) 0 else (position + 1)
         activePath = videoList[nextPosition]
-        pState.update {
-            copy(command = PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))))
-        }
-        pState.update { copy(command = PLayerCommand.SeekToPosition(0)) }
-        pState.update { copy(command = PLayerCommand.Start) }
+        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))) }
+        pState.update {PLayerCommand.SeekToPosition(0)}
+        pState.update {PLayerCommand.Start}
     }
 
     private fun startPreviousVideo(){
@@ -150,11 +150,9 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == 0) videoList.size - 1 else (position - 1)
         activePath = videoList[nextPosition]
-        pState.update {
-            copy(command = PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))))
-        }
-        pState.update { copy(command = PLayerCommand.SeekToPosition(0)) }
-        pState.update { copy(command = PLayerCommand.Start) }
+        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath)))}
+        pState.update {PLayerCommand.SeekToPosition(0)}
+        pState.update {PLayerCommand.Start}
     }
 
     /**

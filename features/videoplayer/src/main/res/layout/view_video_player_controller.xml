@@ -106,4 +106,19 @@
         app:layout_constraintEnd_toEndOf="@+id/videoPlayerControllerSeekbar"
         tools:text="02:52:56"
         tools:ignore="RtlHardcoded,SpUsage" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:id="@+id/videoPlayerControllerOptionsIc"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_expand_more"
+        android:tint="@color/colorAccent"
+        android:layout_marginTop="24dp"
+        android:layout_marginRight="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="RtlHardcoded" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

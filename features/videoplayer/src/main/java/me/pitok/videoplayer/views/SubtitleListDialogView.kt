@@ -6,6 +6,7 @@ import android.os.Environment
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.pitok.sdkextentions.toPx
@@ -31,7 +32,6 @@ class SubtitleListDialogView(
         dialogRecycler.adapter = SubtitleListDialogAdapter(items) {}
         setFolderFileListToAdapter(Environment.getExternalStorageDirectory(), false)
         setContentView(view)
-        val window = window
         window?.setLayout(500f.toPx(), ViewGroup.LayoutParams.WRAP_CONTENT)
         window?.setGravity(Gravity.CENTER)
     }
