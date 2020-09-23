@@ -45,13 +45,14 @@
         android:textColor="@color/colorAccent"
         android:gravity="center"
         tools:maxLines="2"
-        android:textSize="14dp"
+        android:textSize="18dp"
+        android:fontFamily="@font/robotoslab_black"
         android:layout_marginLeft="24dp"
         android:layout_marginRight="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="@tools:sample/lorem/random"
+        tools:text="ترجمه از احمد متقی"
         tools:ignore="SpUsage" />
 
     <include

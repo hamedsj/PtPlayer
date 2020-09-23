@@ -30,11 +30,11 @@ class SubtitleReader @Inject constructor() : SubtitleReaderType {
             val bufferedReader = BufferedReader(FileReader(file))
             var line: String?
             while (bufferedReader.readLine().also { line = it } != null) {
-                if (totalMatchedFound == (input.page+1)*100) break
+                if (totalMatchedFound == (input.page+1)*100 && input.page != -1) break
                 fileContent.append("$line\n")
                 val matcher = pattern.matcher(fileContent)
                 while (matcher.find()) {
-                    if (totalMatchedFound+1 > input.page*100){
+                    if (input.page == -1 || totalMatchedFound+1 > input.page*100){
                         var content = ""
                         var contentLine = ""
                         while(bufferedReader.readLine().also {contentLine = it.trim()}.trim().isNotEmpty()){

@@ -16,10 +16,14 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import me.pitok.datasource.ifSuccessful
+import me.pitok.datasource.otherwise
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
 import me.pitok.subtitle.SubtitleEntity
+import me.pitok.subtitle.SubtitleError
+import me.pitok.subtitle.SubtitleReaderType
+import me.pitok.subtitle.SubtitleRequest
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
@@ -36,13 +40,15 @@ import kotlin.coroutines.CoroutineContext
 
 class VideoPlayerViewModel @Inject constructor(
     private val dataSourceFactory: DefaultDataSourceFactory,
-    private val folderVideosReader: FolderVideosReadType
+    private val folderVideosReader: FolderVideosReadType,
+    private val subtitleReader: SubtitleReaderType
 ) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
 
     var activePath : String? = null
     lateinit var datasourcetype: String
     private var videoList = mutableListOf<String>()
     private val availibleSubtitleList = mutableListOf<SubtitleEntity>()
+    private var activeSubtitlePath = ""
 
     var resumePosition = 0L
     var resumeWindow = 0
@@ -98,6 +104,10 @@ class VideoPlayerViewModel @Inject constructor(
                                     pState.update { SubtitleState.Clear }
                                 }
                             }
+                    }
+                    is VideoPlayerIntent.LoadSubtitle -> {
+                        activeSubtitlePath = videoPlayerIntent.path
+                        loadSubtitle()
                     }
                 }
             }
@@ -170,18 +180,31 @@ class VideoPlayerViewModel @Inject constructor(
     }
 
     private suspend fun getSubtitleContent(currentMiliSec: Long) : SubtitleEntity? {
+        if (availibleSubtitleList.isEmpty()) subtitleReader.read(SubtitleRequest(activeSubtitlePath))
         availibleSubtitleList.forEach { subtitleEntity ->
-            if (subtitleEntity.fromMs <= currentMiliSec && subtitleEntity.toMs < currentMiliSec){
+            if (subtitleEntity.fromMs <= currentMiliSec && subtitleEntity.toMs > currentMiliSec){
                 return subtitleEntity
             }
         }
-        if (availibleSubtitleList.last().toMs > currentMiliSec){
-            return null
-        }else if (availibleSubtitleList.last().toMs < currentMiliSec){
-            //todo: load more subtitle
-            return getSubtitleContent(currentMiliSec)
-        }
         return null
+    }
+
+    private suspend fun loadSubtitle(){
+        if (activeSubtitlePath == "") return
+        availibleSubtitleList.clear()
+        subtitleReader.read(SubtitleRequest(activeSubtitlePath)).ifSuccessful {subtitle ->
+            availibleSubtitleList.addAll(subtitle)
+        }.otherwise { error ->
+            Logger.e(error.message)
+            when(error){
+                is SubtitleError.SubtitleFileNotFound -> {
+                    pState.update { SubtitleState.SubtitleNotFoundError }
+                }
+                is SubtitleError.ReadingSubtitleFileError -> {
+                    pState.update { SubtitleState.SubtitleReadingError }
+                }
+            }
+        }
     }
 
     /**
