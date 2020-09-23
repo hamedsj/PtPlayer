@@ -25,6 +25,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.pitok.androidcore.qulifiers.ApplicationContext
+import me.pitok.design.entity.BottomSheetItemEntity
+import me.pitok.design.views.BottomSheetView
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
@@ -34,6 +36,7 @@ import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
+import me.pitok.videoplayer.states.OptionsState
 import me.pitok.videoplayer.states.PLayerCommand
 import me.pitok.videoplayer.states.PlaybackState
 import me.pitok.videoplayer.states.VideoPlayerState
@@ -49,6 +52,8 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val FADE_IN_ANIM_DURATION = 150L
         const val FADE_OUT_ANIM_DURATION = 250L
         const val CHANGE_POSITION_ANIMATION_DURATION = 250L
+        const val CLICK_ANIMATION_DURATION = 100L
+        const val OPTIONS_MAIN_MENU = 0
     }
 
     @Inject
@@ -99,6 +104,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerPlayIc.setOnClickListener(::onPlayIcClick)
         videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
         videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
+        videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
         exoPlayer.prepare(videoPlayerViewModel.buildVideoSource())
@@ -220,6 +226,15 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Previous)
+            )
+        }
+    }
+
+    private fun onOptionsIcClick(view: View) {
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_MAIN_MENU)
             )
         }
     }
@@ -355,12 +370,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     override fun render(state: VideoPlayerState) {
         Logger.e("render($state)")
-        if (state.playback_state is PlaybackState.Buffering){
+        if (state is PlaybackState.Buffering){
             videoPlayerLoadingAv.visibility = View.VISIBLE
-        }else if (state.playback_state != null){
+        }else{
             videoPlayerLoadingAv.visibility = View.INVISIBLE
         }
-        when(state.playback_state){
+        when(state){
             is PlaybackState.Playing -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
                 videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
@@ -377,8 +392,6 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
             }
-        }
-        when(state.command){
             is PLayerCommand.Start -> {
                 exoPlayer.playWhenReady = true
             }
@@ -386,12 +399,49 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 exoPlayer.playWhenReady = false
             }
             is PLayerCommand.SeekToPosition -> {
-                exoPlayer.seekTo(state.command.position)
+                exoPlayer.seekTo(state.position)
             }
             is PLayerCommand.Prepare -> {
-                exoPlayer.prepare(state.command.mediaSource)
+                exoPlayer.prepare(state.mediaSource)
+            }
+            is OptionsState.ShowMainMenu -> {
+                BottomSheetView(this).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            R.drawable.ic_closed_caption,
+                            R.string.subtitle,
+                            ::onSubtitleClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_speed,
+                            R.string.playback_speed,
+                            ::onPlaybackSpeedClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_audio,
+                            R.string.audio,
+                            ::onAudioClick
+                        )
+                    )
+                    show()
+                }
             }
         }
+    }
+
+    private fun onSubtitleClick(){
+        SubtitleListDialogView(this){path ->
+
+        }.apply {
+            show()
+        }
+    }
+
+    private fun onPlaybackSpeedClick(){
+    }
+
+    private fun onAudioClick(){
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
