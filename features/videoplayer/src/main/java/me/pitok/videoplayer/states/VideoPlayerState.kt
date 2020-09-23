@@ -28,4 +28,6 @@ sealed class OptionsState: VideoPlayerState() {
 sealed class SubtitleState: VideoPlayerState() {
     object Clear: SubtitleState()
     class Show(val subText: String): SubtitleState()
+    object SubtitleNotFoundError: SubtitleState()
+    object SubtitleReadingError: SubtitleState()
 }
