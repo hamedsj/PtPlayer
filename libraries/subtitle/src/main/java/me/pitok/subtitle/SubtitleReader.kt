@@ -9,8 +9,9 @@ import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.util.regex.Pattern
+import javax.inject.Inject
 
-class SubtitleReader() : SubtitleReaderType {
+class SubtitleReader @Inject constructor() : SubtitleReaderType {
 
     private var lineNumberPattern = "(\\d+\\s)"
     private var timeStampPattern = "([\\d:,]+)"
@@ -73,5 +74,5 @@ private fun subtitleTimeToMiliSecond(subTime: String): Long {
 }
 
 typealias SubtitleReaderType =
-        Readable.Suspendable.IO<@JvmSuppressWildcards SubtitleRequest,
-                Response<List<SubtitleEntity>, SubtitleError>>
+        Readable.Suspendable.IO<SubtitleRequest,
+                @JvmSuppressWildcards Response<List<SubtitleEntity>, SubtitleError>>
