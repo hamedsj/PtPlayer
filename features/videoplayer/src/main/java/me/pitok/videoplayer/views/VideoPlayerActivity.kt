@@ -433,14 +433,25 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 subtitleTv.text = ""
             }
             is SubtitleState.Show -> {
+                Logger.e("Subtitle::: ${state.subText}")
                 subtitleTv.text = state.subText
+            }
+            is SubtitleState.SubtitleReadingError -> {
+                Toast.makeText(context,"Error in reading subtitle file!", Toast.LENGTH_LONG).show()
+            }
+            is SubtitleState.SubtitleNotFoundError -> {
+                Toast.makeText(context,"Subtitle file not found!", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun onSubtitleClick(){
         SubtitleListDialogView(this){path ->
-
+            lifecycleScope.launch {
+                videoPlayerViewModel.intents.send(
+                    VideoPlayerIntent.LoadSubtitle(path)
+                )
+            }
         }.apply {
             show()
         }
