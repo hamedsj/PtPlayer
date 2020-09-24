@@ -106,6 +106,9 @@ class VideoPlayerViewModel @Inject constructor(
                             VideoPlayerActivity.OPTIONS_SPEED_MENU ->{
                                 pState.update {OptionsState.ShowPlaybackSpeedMenu}
                             }
+                            VideoPlayerActivity.OPTIONS_AUDIO_MENU ->{
+                                pState.update {OptionsState.ShowAudioMenu}
+                            }
                         }
                     }
                     is VideoPlayerIntent.SubtitleProgressChanged -> {
