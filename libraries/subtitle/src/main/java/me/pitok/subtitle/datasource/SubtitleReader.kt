@@ -1,9 +1,11 @@
-package me.pitok.subtitle
+package me.pitok.subtitle.datasource
 
 import me.pitok.datasource.Failure
 import me.pitok.datasource.Readable
 import me.pitok.datasource.Response
 import me.pitok.datasource.Success
+import me.pitok.subtitle.entity.SubtitleEntity
+import me.pitok.subtitle.error.SubtitleError
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader

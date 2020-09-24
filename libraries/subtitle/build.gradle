@@ -10,5 +10,6 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$library.dagger"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:sdkextentions")
     implementation project(":libraries:datasource")
 }
