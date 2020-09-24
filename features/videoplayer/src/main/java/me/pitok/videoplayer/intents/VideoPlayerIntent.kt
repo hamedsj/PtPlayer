@@ -17,4 +17,5 @@ sealed class PlayerControllerCommmand{
     object Previous: PlayerControllerCommmand()
     object Play: PlayerControllerCommmand()
     object Pause: PlayerControllerCommmand()
+    class ChangePlaybackSpeed(val spped: Float): PlayerControllerCommmand()
 }

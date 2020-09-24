@@ -3,12 +3,9 @@ package me.pitok.videoplayer.views
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -23,6 +20,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
@@ -62,6 +60,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val CLICK_ANIMATION_DURATION = 100L
         const val OPTIONS_MAIN_MENU = 0
         const val OPTIONS_SUBTITLE_MENU = 1
+        const val OPTIONS_SPEED_MENU = 2
     }
 
     @Inject
@@ -73,7 +72,6 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     @ApplicationContext
     @Inject
     lateinit var context: Context
-
 
     private var sliderInTouch = false
 
@@ -434,6 +432,15 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is PLayerCommand.Prepare -> {
                 exoPlayer.prepare(state.mediaSource)
             }
+            is PLayerCommand.ChangeSpeed -> {
+                exoPlayer.setPlaybackParameters(
+                    PlaybackParameters(
+                        state.speed,
+                        exoPlayer.playbackParameters.pitch,
+                        exoPlayer.playbackParameters.skipSilence
+                    )
+                )
+            }
             is OptionsState.ShowMainMenu -> {
                 BottomSheetView(this).apply {
                     sheetTitle = ""
@@ -449,7 +456,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                         BottomSheetItemEntity(
                             R.drawable.ic_speed,
                             R.string.playback_speed,
-                            ::onPlaybackSpeedClick
+                            ::onPlaybackSpeedOptionClick
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_audio,
@@ -473,6 +480,72 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                             R.drawable.ic_delete,
                             R.string.remove_subtitle,
                             ::onDeleteSubtitle
+                        )
+                    )
+                    show()
+                }
+            }
+            is OptionsState.ShowPlaybackSpeedMenu -> {
+                BottomSheetView(this).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 0.25f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._0_25x,
+                            {onChangePlayBackSpeed(0.25f)}
+                        ),
+                        BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 0.5f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._0_50x,
+                            {onChangePlayBackSpeed(0.5f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 0.75f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._0_75x,
+                            {onChangePlayBackSpeed(0.75f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 1f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._1x,
+                            {onChangePlayBackSpeed(1f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 1.25f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._1_25x,
+                            {onChangePlayBackSpeed(1.25f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 1.5f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._1_50x,
+                            {onChangePlayBackSpeed(1.5f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 1.75f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._1_75x,
+                            {onChangePlayBackSpeed(1.75f)}
+                        ),BottomSheetItemEntity(
+                            if (exoPlayer.playbackParameters.speed == 2f)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string._2x,
+                            {onChangePlayBackSpeed(2f)}
                         )
                     )
                     show()
@@ -518,6 +591,24 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
     }
 
+    private fun onPlaybackSpeedOptionClick(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_SPEED_MENU)
+            )
+        }
+    }
+
+    private fun onChangePlayBackSpeed(speed: Float){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SendCommand(
+                    PlayerControllerCommmand.ChangePlaybackSpeed(speed)
+                )
+            )
+        }
+    }
+
     private fun onDeleteSubtitle(){
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
@@ -536,9 +627,6 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }.apply {
             show()
         }
-    }
-
-    private fun onPlaybackSpeedClick(){
     }
 
     private fun onAudioClick(){
