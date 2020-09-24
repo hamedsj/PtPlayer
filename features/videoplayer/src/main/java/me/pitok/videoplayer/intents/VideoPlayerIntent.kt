@@ -8,6 +8,7 @@ sealed class VideoPlayerIntent(): MviIntent {
     class SendCommand(val command: PlayerControllerCommmand): VideoPlayerIntent()
     class ShowOptions(val OptionsMenu: Int): VideoPlayerIntent()
     class LoadSubtitle(val path: String): VideoPlayerIntent()
+    object RemoveSubtitle: VideoPlayerIntent()
     class SubtitleProgressChanged(val progress: Long): VideoPlayerIntent()
 }
 

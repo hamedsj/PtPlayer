@@ -23,6 +23,7 @@ sealed class PLayerCommand: VideoPlayerState() {
 
 sealed class OptionsState: VideoPlayerState() {
     object ShowMainMenu: OptionsState()
+    object ShowSubtitleMenu: OptionsState()
 }
 
 sealed class SubtitleState: VideoPlayerState() {

@@ -51,6 +51,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val CHANGE_POSITION_ANIMATION_DURATION = 250L
         const val CLICK_ANIMATION_DURATION = 100L
         const val OPTIONS_MAIN_MENU = 0
+        const val OPTIONS_SUBTITLE_MENU = 1
     }
 
     @Inject
@@ -413,7 +414,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                         BottomSheetItemEntity(
                             R.drawable.ic_closed_caption,
                             R.string.subtitle,
-                            ::onSubtitleClick
+                            ::onSubtitleOptionClick
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_speed,
@@ -424,6 +425,24 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                             R.drawable.ic_audio,
                             R.string.audio,
                             ::onAudioClick
+                        )
+                    )
+                    show()
+                }
+            }
+            is OptionsState.ShowSubtitleMenu -> {
+                BottomSheetView(this).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            R.drawable.ic_delete,
+                            R.string.remove_subtitle,
+                            ::onDeleteSubtitle
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_closed_caption,
+                            R.string.choose_subtitle,
+                            ::onSubtitleClick
                         )
                     )
                     show()
@@ -442,6 +461,22 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is SubtitleState.SubtitleNotFoundError -> {
                 Toast.makeText(context,"Subtitle file not found!", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun onSubtitleOptionClick(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_SUBTITLE_MENU)
+            )
+        }
+    }
+
+    private fun onDeleteSubtitle(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.RemoveSubtitle
+            )
         }
     }
 
