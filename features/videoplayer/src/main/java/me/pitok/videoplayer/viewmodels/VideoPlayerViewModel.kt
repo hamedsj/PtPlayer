@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -85,6 +86,13 @@ class VideoPlayerViewModel @Inject constructor(
                             is PlayerControllerCommmand.Pause -> {
                                 pState.update {PLayerCommand.Pause}
                             }
+                            is PlayerControllerCommmand.ChangePlaybackSpeed -> {
+                                pState.update {
+                                    PLayerCommand.ChangeSpeed(
+                                        videoPlayerIntent.command.spped
+                                    )
+                                }
+                            }
                         }
                     }
                     is VideoPlayerIntent.ShowOptions -> {
@@ -94,6 +102,9 @@ class VideoPlayerViewModel @Inject constructor(
                             }
                             VideoPlayerActivity.OPTIONS_SUBTITLE_MENU ->{
                                 pState.update {OptionsState.ShowSubtitleMenu}
+                            }
+                            VideoPlayerActivity.OPTIONS_SPEED_MENU ->{
+                                pState.update {OptionsState.ShowPlaybackSpeedMenu}
                             }
                         }
                     }
