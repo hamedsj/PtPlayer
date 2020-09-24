@@ -2,6 +2,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="_10_seconds">10 seconds</string>
     <string name="subtitle">Subtitle</string>
+    <string name="choose_subtitle">Choose Subtitle File</string>
+    <string name="remove_subtitle">Remove Subtitle</string>
     <string name="playback_speed">Playback Speed</string>
     <string name="audio" tools:ignore="ExtraTranslation">Audio</string>
 </resources>

@@ -92,6 +92,9 @@ class VideoPlayerViewModel @Inject constructor(
                             VideoPlayerActivity.OPTIONS_MAIN_MENU ->{
                                 pState.update {OptionsState.ShowMainMenu}
                             }
+                            VideoPlayerActivity.OPTIONS_SUBTITLE_MENU ->{
+                                pState.update {OptionsState.ShowSubtitleMenu}
+                            }
                         }
                     }
                     is VideoPlayerIntent.SubtitleProgressChanged -> {
@@ -108,6 +111,10 @@ class VideoPlayerViewModel @Inject constructor(
                     is VideoPlayerIntent.LoadSubtitle -> {
                         activeSubtitlePath = videoPlayerIntent.path
                         loadSubtitle()
+                    }
+                    is VideoPlayerIntent.RemoveSubtitle -> {
+                        activeSubtitlePath = ""
+                        availibleSubtitleList.clear()
                     }
                 }
             }
