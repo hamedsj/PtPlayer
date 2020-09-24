@@ -19,11 +19,13 @@ sealed class PLayerCommand: VideoPlayerState() {
     object Start: PLayerCommand()
     class Prepare(val mediaSource: MediaSource): PLayerCommand()
     class SeekToPosition(val position : Long): PLayerCommand()
+    class ChangeSpeed(val speed: Float): PLayerCommand()
 }
 
 sealed class OptionsState: VideoPlayerState() {
     object ShowMainMenu: OptionsState()
     object ShowSubtitleMenu: OptionsState()
+    object ShowPlaybackSpeedMenu: OptionsState()
 }
 
 sealed class SubtitleState: VideoPlayerState() {
