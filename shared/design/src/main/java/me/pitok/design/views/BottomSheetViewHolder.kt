@@ -20,7 +20,12 @@ internal class BottomSheetViewHolder(view: View) : RecyclerView.ViewHolder(view)
         } else {
             itemIcon.visibility = View.GONE
         }
-        itemTitle.setText(item.itemTitleResource)
+        item.itemTitleResource?.let {
+            itemTitle.setText(it)
+        }
+        item.itemTitleString?.let {
+            itemTitle.text = it
+        }
         itemView.setOnClickListener {
             onClick.invoke()
             item.itemOnClickListener.invoke()

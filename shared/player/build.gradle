@@ -15,4 +15,5 @@ dependencies {
 
     implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:androidcore")
+    implementation project(":libraries:logger")
 }

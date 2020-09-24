@@ -13,5 +13,6 @@
     <string name="_1_50x">1.5x</string>
     <string name="_1_75x">1.75x</string>
     <string name="_2x">2.0x</string>
+    <string name="disable_audio">Disable Audio</string>
     <string name="audio" tools:ignore="ExtraTranslation">Audio</string>
 </resources>
