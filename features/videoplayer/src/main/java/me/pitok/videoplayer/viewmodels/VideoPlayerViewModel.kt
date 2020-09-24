@@ -20,10 +20,10 @@ import me.pitok.datasource.otherwise
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
-import me.pitok.subtitle.SubtitleEntity
-import me.pitok.subtitle.SubtitleError
-import me.pitok.subtitle.SubtitleReaderType
-import me.pitok.subtitle.SubtitleRequest
+import me.pitok.subtitle.entity.SubtitleEntity
+import me.pitok.subtitle.error.SubtitleError
+import me.pitok.subtitle.datasource.SubtitleReaderType
+import me.pitok.subtitle.datasource.SubtitleRequest
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
@@ -199,7 +199,7 @@ class VideoPlayerViewModel @Inject constructor(
     private suspend fun loadSubtitle(){
         if (activeSubtitlePath == "") return
         availibleSubtitleList.clear()
-        subtitleReader.read(SubtitleRequest(activeSubtitlePath)).ifSuccessful {subtitle ->
+        subtitleReader.read(SubtitleRequest(activeSubtitlePath)).ifSuccessful { subtitle ->
             availibleSubtitleList.addAll(subtitle)
         }.otherwise { error ->
             Logger.e(error.message)
@@ -212,6 +212,10 @@ class VideoPlayerViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun isSubtitleReady() : Boolean{
+        return availibleSubtitleList.isNotEmpty()
     }
 
     /**

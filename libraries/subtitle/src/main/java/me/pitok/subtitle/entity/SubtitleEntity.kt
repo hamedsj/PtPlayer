@@ -1,4 +1,4 @@
-package me.pitok.subtitle
+package me.pitok.subtitle.entity
 
 data class SubtitleEntity(val content: String,
                           val fromMs: Long,
