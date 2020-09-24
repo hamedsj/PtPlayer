@@ -19,9 +19,12 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector.SelectionOverride
+import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
 import kotlinx.android.synthetic.main.view_video_player_controller.*
@@ -61,6 +64,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val OPTIONS_MAIN_MENU = 0
         const val OPTIONS_SUBTITLE_MENU = 1
         const val OPTIONS_SPEED_MENU = 2
+        const val OPTIONS_AUDIO_MENU = 3
     }
 
     @Inject
@@ -461,7 +465,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                         BottomSheetItemEntity(
                             R.drawable.ic_audio,
                             R.string.audio,
-                            ::onAudioClick
+                            ::onAudioOptionClick
                         )
                     )
                     show()
@@ -495,7 +499,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                             else
                                 null,
                             R.string._0_25x,
-                            {onChangePlayBackSpeed(0.25f)}
+                            { onChangePlayBackSpeed(0.25f) }
                         ),
                         BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 0.5f)
@@ -503,53 +507,94 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                             else
                                 null,
                             R.string._0_50x,
-                            {onChangePlayBackSpeed(0.5f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(0.5f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 0.75f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._0_75x,
-                            {onChangePlayBackSpeed(0.75f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(0.75f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 1f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._1x,
-                            {onChangePlayBackSpeed(1f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(1f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 1.25f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._1_25x,
-                            {onChangePlayBackSpeed(1.25f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(1.25f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 1.5f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._1_50x,
-                            {onChangePlayBackSpeed(1.5f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(1.5f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 1.75f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._1_75x,
-                            {onChangePlayBackSpeed(1.75f)}
-                        ),BottomSheetItemEntity(
+                            { onChangePlayBackSpeed(1.75f) }
+                        ), BottomSheetItemEntity(
                             if (exoPlayer.playbackParameters.speed == 2f)
                                 R.drawable.ic_check
                             else
                                 null,
                             R.string._2x,
-                            {onChangePlayBackSpeed(2f)}
+                            { onChangePlayBackSpeed(2f) }
                         )
                     )
                     show()
                 }
+            }
+            is OptionsState.ShowAudioMenu -> {
+                exoPlayer.trackSelector
+                    .currentMappedTrackInfo
+                    ?.getTrackGroups(C.TRACK_TYPE_AUDIO)
+                    ?.apply {
+                        val audioTrackList = mutableListOf<BottomSheetItemEntity>()
+                        audioTrackList.add(
+                            BottomSheetItemEntity(
+                                if (!exoPlayer.isAudioRendererEnabled())
+                                    R.drawable.ic_check
+                                else
+                                    null,
+                                R.string.disable_audio,
+                                {exoPlayer.disableAudioRenderer()},
+                                null
+                            )
+                        )
+                        for (groupIndex in 0 until length) {
+                            for (formatIndex in 0 until get(groupIndex).length) {
+                                audioTrackList.add(
+                                    BottomSheetItemEntity(
+                                        if (exoPlayer.isGroupIndexSelected(groupIndex))
+                                            R.drawable.ic_check
+                                        else
+                                            null,
+                                        null,
+                                        {exoPlayer.selectTrackGroup(groupIndex)},
+                                        DefaultTrackNameProvider(resources).getTrackName(
+                                            get(groupIndex).getFormat(formatIndex)
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                        BottomSheetView(this@VideoPlayerActivity).apply {
+                            sheetTitle = ""
+                            sheetItems = audioTrackList
+                            show()
+                        }
+                    }
             }
             is SubtitleState.Clear -> {
                 subtitleTv.text = ""
@@ -569,7 +614,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     private fun getSubtitleSpannableFromString(str: String): SpannableString {
         val subtitleBackgroundColorSpan = SubtitleBackgroundColorSpan(
-            ContextCompat.getColor(context,R.color.colorHighlightText),
+            ContextCompat.getColor(context, R.color.colorHighlightText),
             8f.toPx().toFloat(),
             4f.toPx().toFloat()
         )
@@ -595,6 +640,14 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.ShowOptions(OPTIONS_SPEED_MENU)
+            )
+        }
+    }
+
+    private fun onAudioOptionClick(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_AUDIO_MENU)
             )
         }
     }
@@ -627,9 +680,6 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }.apply {
             show()
         }
-    }
-
-    private fun onAudioClick(){
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
