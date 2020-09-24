@@ -3,7 +3,12 @@ package me.pitok.videoplayer.views
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -13,7 +18,9 @@ import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -25,20 +32,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.pitok.androidcore.qulifiers.ApplicationContext
+import me.pitok.design.entity.BottomSheetItemEntity
+import me.pitok.design.views.BottomSheetView
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
 import me.pitok.player.di.IndictableSimpleExoPlayer
 import me.pitok.sdkextentions.getScreenWidth
+import me.pitok.sdkextentions.toPx
+import me.pitok.subtitle.components.SubtitleBackgroundColorSpan
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
-import me.pitok.videoplayer.states.PLayerCommand
-import me.pitok.videoplayer.states.PlaybackState
-import me.pitok.videoplayer.states.VideoPlayerState
+import me.pitok.videoplayer.states.*
 import me.pitok.videoplayer.viewmodels.VideoPlayerViewModel
 import javax.inject.Inject
+
 
 class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Player.EventListener {
 
@@ -49,6 +59,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         const val FADE_IN_ANIM_DURATION = 150L
         const val FADE_OUT_ANIM_DURATION = 250L
         const val CHANGE_POSITION_ANIMATION_DURATION = 250L
+        const val CLICK_ANIMATION_DURATION = 100L
+        const val OPTIONS_MAIN_MENU = 0
+        const val OPTIONS_SUBTITLE_MENU = 1
     }
 
     @Inject
@@ -74,22 +87,24 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         setInitialViews()
         val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
-        videoPlayerControllerHighlight.setOnTouchListener(object: View.OnTouchListener{
-            private val gestureDetector = GestureDetector(context,object:
+        videoPlayerControllerHighlight.setOnTouchListener(object : View.OnTouchListener {
+            private val gestureDetector = GestureDetector(context, object :
                 GestureDetector.SimpleOnGestureListener() {
                 override fun onDoubleTap(e: MotionEvent?): Boolean {
-                    if (requireNotNull(e?.x) >=  screenWidth/2f){
+                    if (requireNotNull(e?.x) >= screenWidth / 2f) {
                         onFastForwardTapped()
-                    }else{
+                    } else {
                         onRewindTapped()
                     }
                     return super.onDoubleTap(e)
                 }
+
                 override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
                     onControllerToggle()
                     return super.onSingleTapConfirmed(e)
                 }
             })
+
             @SuppressLint("ClickableViewAccessibility")
             override fun onTouch(p0: View?, p1: MotionEvent?): Boolean {
                 gestureDetector.onTouchEvent(p1)
@@ -99,14 +114,16 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerPlayIc.setOnClickListener(::onPlayIcClick)
         videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
         videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
+        videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
         exoPlayer.prepare(videoPlayerViewModel.buildVideoSource())
         exoPlayer.addListener(this)
-        exoPlayer.onPositionChanged = {position ->
+        exoPlayer.onPositionChanged = { position ->
             onProgressChanged(position.toFloat())
         }
-        videoPlayerControllerSeekbar.addOnSliderTouchListener(object: Slider.OnSliderTouchListener{
+        videoPlayerControllerSeekbar.addOnSliderTouchListener(object :
+            Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
                 sliderInTouch = true
             }
@@ -195,6 +212,11 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerSeekbar.apply {
             value = if (position >= valueTo) valueTo else position
         }
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SubtitleProgressChanged(progress = exoPlayer.currentPosition)
+            )
+        }
     }
 
     private fun onPlayIcClick(view: View) {
@@ -224,17 +246,29 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
     }
 
+    private fun onOptionsIcClick(view: View) {
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_MAIN_MENU)
+            )
+        }
+    }
+
     private fun getInitialData() {
         if (intent.action != null){
             try {
                 videoPlayerViewModel.datasourcetype = PATH_DATA_TYPE
                 if (intent.data?.scheme == "content"){
-                    videoPlayerViewModel.activePath = videoPlayerViewModel.getRealPathFromURI(contentResolver,intent.data)
+                    videoPlayerViewModel.activePath = videoPlayerViewModel.getRealPathFromURI(
+                        contentResolver,
+                        intent.data
+                    )
                 }
                 Logger.v("${videoPlayerViewModel.activePath}")
                 videoPlayerViewModel.getFolderVideos(contentResolver)
             }catch (e: Exception){
-                Toast.makeText(context,"PtPlayer cannot play this file",Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "PtPlayer cannot play this file", Toast.LENGTH_LONG).show()
                 Logger.e(e.message)
                 finish()
             }
@@ -249,10 +283,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
         when(videoPlayerViewModel.datasourcetype){
             PATH_DATA_TYPE -> {
-                intent.getStringExtra(DATA_SOURCE_KEY)?.run{
+                intent.getStringExtra(DATA_SOURCE_KEY)?.run {
                     videoPlayerViewModel.activePath = this
                     videoPlayerViewModel.getFolderVideos(contentResolver)
-                }?:run{
+                } ?: run {
                     Logger.e("video path not found")
                     finish()
                 }
@@ -285,6 +319,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             fadeOutObjectAnimator.doOnEnd {
                 setPlaybackButtonsVisibility(visible = false)
                 setFullScreen(false)
+                setSubtitleBottomMargin(12f)
             }
             fadeOutObjectAnimator.start()
         }else{
@@ -298,10 +333,17 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             fadeInObjectAnimator.duration = FADE_OUT_ANIM_DURATION
             fadeInObjectAnimator.doOnEnd {
                 setFullScreen(true)
+                setSubtitleBottomMargin(24f)
             }
             fadeInObjectAnimator.start()
             setPlaybackButtonsVisibility(visible = true)
         }
+    }
+
+    private fun setSubtitleBottomMargin(bottomMargin: Float){
+        val lp = subtitleTv.layoutParams as ConstraintLayout.LayoutParams
+        lp.bottomMargin = bottomMargin.toPx()
+        subtitleTv.layoutParams = lp
     }
 
     private fun setFullScreen(enabled: Boolean = true){
@@ -331,6 +373,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerNextIc.visibility = targetVisibility
         videoPlayerControllerBackIc.visibility = targetVisibility
         videoPlayerControllerSeekbar.visibility = targetVisibility
+        videoPlayerControllerOptionsIc.visibility = targetVisibility
     }
 
     override fun onResume() {
@@ -355,21 +398,23 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     override fun render(state: VideoPlayerState) {
         Logger.e("render($state)")
-        if (state.playback_state is PlaybackState.Buffering){
+        if (state is PlaybackState.Buffering){
             videoPlayerLoadingAv.visibility = View.VISIBLE
-        }else if (state.playback_state != null){
+        }else{
             videoPlayerLoadingAv.visibility = View.INVISIBLE
         }
-        when(state.playback_state){
+        when(state){
             is PlaybackState.Playing -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
                 videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
+                videoPlayerControllerTimeLeft.text =
+                    miliSecToFormatedTime(exoPlayer.currentPosition)
             }
             is PlaybackState.ReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
                 videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
+                videoPlayerControllerTimeLeft.text =
+                    miliSecToFormatedTime(exoPlayer.currentPosition)
             }
             is PlaybackState.Ended -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
@@ -377,8 +422,6 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
             }
-        }
-        when(state.command){
             is PLayerCommand.Start -> {
                 exoPlayer.playWhenReady = true
             }
@@ -386,12 +429,119 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 exoPlayer.playWhenReady = false
             }
             is PLayerCommand.SeekToPosition -> {
-                exoPlayer.seekTo(state.command.position)
+                exoPlayer.seekTo(state.position)
             }
             is PLayerCommand.Prepare -> {
-                exoPlayer.prepare(state.command.mediaSource)
+                exoPlayer.prepare(state.mediaSource)
+            }
+            is OptionsState.ShowMainMenu -> {
+                BottomSheetView(this).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            R.drawable.ic_closed_caption,
+                            R.string.subtitle,
+                            if (videoPlayerViewModel.isSubtitleReady())
+                                ::onSubtitleOptionClick
+                            else
+                                ::onSubtitleClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_speed,
+                            R.string.playback_speed,
+                            ::onPlaybackSpeedClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_audio,
+                            R.string.audio,
+                            ::onAudioClick
+                        )
+                    )
+                    show()
+                }
+            }
+            is OptionsState.ShowSubtitleMenu -> {
+                BottomSheetView(this).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            R.drawable.ic_closed_caption,
+                            R.string.choose_subtitle,
+                            ::onSubtitleClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_delete,
+                            R.string.remove_subtitle,
+                            ::onDeleteSubtitle
+                        )
+                    )
+                    show()
+                }
+            }
+            is SubtitleState.Clear -> {
+                subtitleTv.text = ""
+            }
+            is SubtitleState.Show -> {
+                Logger.e("Subtitle::: ${state.subText}")
+                subtitleTv.text = getSubtitleSpannableFromString(state.subText)
+            }
+            is SubtitleState.SubtitleReadingError -> {
+                Toast.makeText(context, "Error in reading subtitle file!", Toast.LENGTH_LONG).show()
+            }
+            is SubtitleState.SubtitleNotFoundError -> {
+                Toast.makeText(context, "Subtitle file not found!", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun getSubtitleSpannableFromString(str: String): SpannableString {
+        val subtitleBackgroundColorSpan = SubtitleBackgroundColorSpan(
+            ContextCompat.getColor(context,R.color.colorHighlightText),
+            8f.toPx().toFloat(),
+            4f.toPx().toFloat()
+        )
+        val spannableString = SpannableString(str)
+        spannableString.setSpan(
+            subtitleBackgroundColorSpan,
+            0,
+            str.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        return spannableString
+    }
+
+    private fun onSubtitleOptionClick(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.ShowOptions(OPTIONS_SUBTITLE_MENU)
+            )
+        }
+    }
+
+    private fun onDeleteSubtitle(){
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.RemoveSubtitle
+            )
+        }
+    }
+
+    private fun onSubtitleClick(){
+        SubtitleListDialogView(this){ path ->
+            lifecycleScope.launch {
+                videoPlayerViewModel.intents.send(
+                    VideoPlayerIntent.LoadSubtitle(path)
+                )
+            }
+        }.apply {
+            show()
+        }
+    }
+
+    private fun onPlaybackSpeedClick(){
+    }
+
+    private fun onAudioClick(){
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
@@ -440,9 +590,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SetPlayBackState(
-                    if (isPlaying){
+                    if (isPlaying) {
                         PlaybackState.Playing
-                    }else{
+                    } else {
                         PlaybackState.ReadyAndStoped
                     }
                 )

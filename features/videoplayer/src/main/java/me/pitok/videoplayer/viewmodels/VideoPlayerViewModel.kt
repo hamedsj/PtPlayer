@@ -16,14 +16,21 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import me.pitok.datasource.ifSuccessful
+import me.pitok.datasource.otherwise
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
+import me.pitok.subtitle.entity.SubtitleEntity
+import me.pitok.subtitle.error.SubtitleError
+import me.pitok.subtitle.datasource.SubtitleReaderType
+import me.pitok.subtitle.datasource.SubtitleRequest
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
+import me.pitok.videoplayer.states.OptionsState
 import me.pitok.videoplayer.states.PLayerCommand
+import me.pitok.videoplayer.states.SubtitleState
 import me.pitok.videoplayer.states.VideoPlayerState
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import java.io.File
@@ -33,12 +40,15 @@ import kotlin.coroutines.CoroutineContext
 
 class VideoPlayerViewModel @Inject constructor(
     private val dataSourceFactory: DefaultDataSourceFactory,
-    private val folderVideosReader: FolderVideosReadType
+    private val folderVideosReader: FolderVideosReadType,
+    private val subtitleReader: SubtitleReaderType
 ) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
 
     var activePath : String? = null
     lateinit var datasourcetype: String
     private var videoList = mutableListOf<String>()
+    private val availibleSubtitleList = mutableListOf<SubtitleEntity>()
+    private var activeSubtitlePath = ""
 
     var resumePosition = 0L
     var resumeWindow = 0
@@ -59,9 +69,7 @@ class VideoPlayerViewModel @Inject constructor(
             intents.consumeAsFlow().collect { videoPlayerIntent ->
                 when (videoPlayerIntent){
                     is VideoPlayerIntent.SetPlayBackState -> {
-                        pState.update {
-                            copy(playback_state = videoPlayerIntent.playbackState)
-                        }
+                        pState.update {videoPlayerIntent.playbackState}
                     }
                     is VideoPlayerIntent.SendCommand -> {
                         when (videoPlayerIntent.command) {
@@ -72,16 +80,41 @@ class VideoPlayerViewModel @Inject constructor(
                                 startPreviousVideo()
                             }
                             is PlayerControllerCommmand.Play -> {
-                                pState.update {
-                                    copy(command = PLayerCommand.Start)
-                                }
+                                pState.update {PLayerCommand.Start}
                             }
                             is PlayerControllerCommmand.Pause -> {
-                                pState.update {
-                                    copy(command = PLayerCommand.Pause)
-                                }
+                                pState.update {PLayerCommand.Pause}
                             }
                         }
+                    }
+                    is VideoPlayerIntent.ShowOptions -> {
+                        when(videoPlayerIntent.OptionsMenu){
+                            VideoPlayerActivity.OPTIONS_MAIN_MENU ->{
+                                pState.update {OptionsState.ShowMainMenu}
+                            }
+                            VideoPlayerActivity.OPTIONS_SUBTITLE_MENU ->{
+                                pState.update {OptionsState.ShowSubtitleMenu}
+                            }
+                        }
+                    }
+                    is VideoPlayerIntent.SubtitleProgressChanged -> {
+                        getSubtitleContent(videoPlayerIntent.progress)?.apply {
+                                withContext(Dispatchers.Main) {
+                                    pState.update { SubtitleState.Show(content) }
+                                }
+                            } ?: run {
+                                withContext(Dispatchers.Main) {
+                                    pState.update { SubtitleState.Clear }
+                                }
+                            }
+                    }
+                    is VideoPlayerIntent.LoadSubtitle -> {
+                        activeSubtitlePath = videoPlayerIntent.path
+                        loadSubtitle()
+                    }
+                    is VideoPlayerIntent.RemoveSubtitle -> {
+                        activeSubtitlePath = ""
+                        availibleSubtitleList.clear()
                     }
                 }
             }
@@ -138,11 +171,9 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == videoList.size - 1) 0 else (position + 1)
         activePath = videoList[nextPosition]
-        pState.update {
-            copy(command = PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))))
-        }
-        pState.update { copy(command = PLayerCommand.SeekToPosition(0)) }
-        pState.update { copy(command = PLayerCommand.Start) }
+        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))) }
+        pState.update {PLayerCommand.SeekToPosition(0)}
+        pState.update {PLayerCommand.Start}
     }
 
     private fun startPreviousVideo(){
@@ -150,11 +181,41 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == 0) videoList.size - 1 else (position - 1)
         activePath = videoList[nextPosition]
-        pState.update {
-            copy(command = PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))))
+        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath)))}
+        pState.update {PLayerCommand.SeekToPosition(0)}
+        pState.update {PLayerCommand.Start}
+    }
+
+    private suspend fun getSubtitleContent(currentMiliSec: Long) : SubtitleEntity? {
+        if (availibleSubtitleList.isEmpty()) subtitleReader.read(SubtitleRequest(activeSubtitlePath))
+        availibleSubtitleList.forEach { subtitleEntity ->
+            if (subtitleEntity.fromMs <= currentMiliSec && subtitleEntity.toMs > currentMiliSec){
+                return subtitleEntity
+            }
         }
-        pState.update { copy(command = PLayerCommand.SeekToPosition(0)) }
-        pState.update { copy(command = PLayerCommand.Start) }
+        return null
+    }
+
+    private suspend fun loadSubtitle(){
+        if (activeSubtitlePath == "") return
+        availibleSubtitleList.clear()
+        subtitleReader.read(SubtitleRequest(activeSubtitlePath)).ifSuccessful { subtitle ->
+            availibleSubtitleList.addAll(subtitle)
+        }.otherwise { error ->
+            Logger.e(error.message)
+            when(error){
+                is SubtitleError.SubtitleFileNotFound -> {
+                    pState.update { SubtitleState.SubtitleNotFoundError }
+                }
+                is SubtitleError.ReadingSubtitleFileError -> {
+                    pState.update { SubtitleState.SubtitleReadingError }
+                }
+            }
+        }
+    }
+
+    fun isSubtitleReady() : Boolean{
+        return availibleSubtitleList.isNotEmpty()
     }
 
     /**

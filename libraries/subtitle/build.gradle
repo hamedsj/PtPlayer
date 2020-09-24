@@ -1,14 +1,15 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
-    implementation "com.google.android.material:material:$library.material"
-    implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
-    implementation "androidx.recyclerview:recyclerview:$library.recyclerview"
+    implementation "com.google.dagger:dagger:$library.dagger"
+    kapt "com.google.dagger:dagger-compiler:$library.dagger"
 
-    implementation project(":libraries:logger")
+    implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:sdkextentions")
+    implementation project(":libraries:datasource")
 }
