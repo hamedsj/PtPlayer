@@ -84,6 +84,7 @@ class IndictableSimpleExoPlayer(context: Context, val trackSelector: DefaultTrac
     }
 
     fun isGroupIndexSelected(groupIndex: Int): Boolean{
+        if (!isAudioRendererEnabled()) return false
         trackSelector.currentMappedTrackInfo?.getTrackGroups(C.TRACK_TYPE_AUDIO)?.let{trackGroupArray ->
             trackSelector.parameters.getSelectionOverride(C.TRACK_TYPE_AUDIO, trackGroupArray)?.let {override ->
                 return override.groupIndex == groupIndex
