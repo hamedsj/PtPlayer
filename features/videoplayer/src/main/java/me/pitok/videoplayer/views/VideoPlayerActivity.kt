@@ -3,6 +3,7 @@ package me.pitok.videoplayer.views
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
@@ -23,7 +24,6 @@ import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector.SelectionOverride
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
@@ -84,8 +84,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
+        Logger.w("OnCreate")
         VideoPlayerComponentBuilder.getComponent().inject(this)
-        getInitialData()
+        getInitialData(savedInstanceState)
         setInitialViews()
         val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
@@ -257,7 +258,11 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
     }
 
-    private fun getInitialData() {
+    private fun getInitialData(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) {
+            videoPlayerViewModel.resumePosition = 0L
+            videoPlayerViewModel.resumeWindow = 0
+        }
         if (intent.action != null){
             try {
                 videoPlayerViewModel.datasourcetype = PATH_DATA_TYPE
@@ -306,6 +311,17 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
         videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+        val lp = videoPlayerControllerSeekbar.layoutParams as ConstraintLayout.LayoutParams
+        videoPlayerControllerSeekbar.layoutParams = when (requestedOrientation){
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                lp.bottomMargin = 8f.toPx()
+                lp
+            }
+            else -> {
+                lp.bottomMargin = 32f.toPx()
+                lp
+            }
+        }
     }
 
     private fun onControllerToggle(){
@@ -379,6 +395,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun onResume() {
+        Logger.w("OnResume")
         exoPlayer.seekTo(
             videoPlayerViewModel.resumeWindow,
             videoPlayerViewModel.resumePosition
@@ -387,6 +404,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun onPause() {
+        Logger.w("OnPause")
         videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
         videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
         exoPlayer.playWhenReady = false
@@ -394,6 +412,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun onDestroy() {
+        Logger.w("OnDestroy")
         exoPlayer.stop()
         super.onDestroy()
     }
@@ -466,6 +485,11 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                             R.drawable.ic_audio,
                             R.string.audio,
                             ::onAudioOptionClick
+                        ),
+                        BottomSheetItemEntity(
+                            R.drawable.ic_screen_rotation,
+                            R.string.rotate_screen,
+                            ::onScreenRotationOptionClick
                         )
                     )
                     show()
@@ -608,6 +632,19 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
             is SubtitleState.SubtitleNotFoundError -> {
                 Toast.makeText(context, "Subtitle file not found!", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun onScreenRotationOptionClick(){
+        videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
+        videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
+        requestedOrientation = when (requestedOrientation){
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+            else -> {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             }
         }
     }
