@@ -443,19 +443,19 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
             }
-            is PLayerCommand.Start -> {
+            is PLayerCommandState.Start -> {
                 exoPlayer.playWhenReady = true
             }
-            is PLayerCommand.Pause -> {
+            is PLayerCommandState.Pause -> {
                 exoPlayer.playWhenReady = false
             }
-            is PLayerCommand.SeekToPosition -> {
+            is PLayerCommandState.SeekToPosition -> {
                 exoPlayer.seekTo(state.position)
             }
-            is PLayerCommand.Prepare -> {
+            is PLayerCommandState.Prepare -> {
                 exoPlayer.prepare(state.mediaSource)
             }
-            is PLayerCommand.ChangeSpeed -> {
+            is PLayerCommandState.ChangeSpeed -> {
                 exoPlayer.setPlaybackParameters(
                     PlaybackParameters(
                         state.speed,
