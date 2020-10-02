@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.media.AudioManager
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
@@ -762,6 +763,13 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         Logger.e("onIsPlayingChanged( isPlaying = $isPlaying )")
+        if (isPlaying){
+            try {
+                requestAudioFocus()
+            }catch (e: Exception){
+                Logger.e(e.message)
+            }
+        }
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SetPlayBackState(
@@ -786,4 +794,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         else "$durationMinStr:$durationSecStr"
     }
 
+    private fun requestAudioFocus() : Boolean{
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val result = audioManager.requestAudioFocus({}, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        return (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+    }
 }
