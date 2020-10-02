@@ -8,7 +8,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -30,7 +29,7 @@ import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
 import me.pitok.videoplayer.states.OptionsState
-import me.pitok.videoplayer.states.PLayerCommand
+import me.pitok.videoplayer.states.PLayerCommandState
 import me.pitok.videoplayer.states.SubtitleState
 import me.pitok.videoplayer.states.VideoPlayerState
 import me.pitok.videoplayer.views.VideoPlayerActivity
@@ -81,14 +80,14 @@ class VideoPlayerViewModel @Inject constructor(
                                 startPreviousVideo()
                             }
                             is PlayerControllerCommmand.Play -> {
-                                pState.update {PLayerCommand.Start}
+                                pState.update {PLayerCommandState.Start}
                             }
                             is PlayerControllerCommmand.Pause -> {
-                                pState.update {PLayerCommand.Pause}
+                                pState.update {PLayerCommandState.Pause}
                             }
                             is PlayerControllerCommmand.ChangePlaybackSpeed -> {
                                 pState.update {
-                                    PLayerCommand.ChangeSpeed(
+                                    PLayerCommandState.ChangeSpeed(
                                         videoPlayerIntent.command.spped
                                     )
                                 }
@@ -185,9 +184,9 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == videoList.size - 1) 0 else (position + 1)
         activePath = videoList[nextPosition]
-        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath))) }
-        pState.update {PLayerCommand.SeekToPosition(0)}
-        pState.update {PLayerCommand.Start}
+        pState.update {PLayerCommandState.Prepare(buildFromPath(requireNotNull(activePath))) }
+        pState.update {PLayerCommandState.SeekToPosition(0)}
+        pState.update {PLayerCommandState.Start}
     }
 
     private fun startPreviousVideo(){
@@ -195,9 +194,9 @@ class VideoPlayerViewModel @Inject constructor(
         val position = videoList.indexOf(activePath)
         val nextPosition = if (position == -1 || position == 0) videoList.size - 1 else (position - 1)
         activePath = videoList[nextPosition]
-        pState.update {PLayerCommand.Prepare(buildFromPath(requireNotNull(activePath)))}
-        pState.update {PLayerCommand.SeekToPosition(0)}
-        pState.update {PLayerCommand.Start}
+        pState.update {PLayerCommandState.Prepare(buildFromPath(requireNotNull(activePath)))}
+        pState.update {PLayerCommandState.SeekToPosition(0)}
+        pState.update {PLayerCommandState.Start}
     }
 
     private suspend fun getSubtitleContent(currentMiliSec: Long) : SubtitleEntity? {
