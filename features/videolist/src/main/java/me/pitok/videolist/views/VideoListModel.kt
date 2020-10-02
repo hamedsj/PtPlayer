@@ -70,6 +70,8 @@ abstract class VideoListModel :
                         scaleType = ImageView.ScaleType.CENTER_CROP
                         clearColorFilter()
                         load(File(path), coilImageLoader){
+                            placeholder(android.R.color.black)
+                            error(android.R.color.black)
                             videoFrameMillis(1000)
                         }
                         layoutParams = fileIcLayoutParams
