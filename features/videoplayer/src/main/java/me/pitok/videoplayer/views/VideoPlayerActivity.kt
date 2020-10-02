@@ -21,10 +21,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.PlaybackParameters
-import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
@@ -79,6 +76,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     lateinit var context: Context
 
     private var sliderInTouch = false
+    private var durationSet = false
 
     private val videoPlayerViewModel: VideoPlayerViewModel by viewModels { viewModelFactory }
 
@@ -134,17 +132,19 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
 
             override fun onStopTrackingTouch(slider: Slider) {
                 sliderInTouch = false
+                if (!durationSet)return
                 exoPlayer.seekTo(slider.value.toLong())
             }
 
         })
         videoPlayerControllerSeekbar.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
-            if (!fromUser) return@OnChangeListener
+            if (!fromUser || !durationSet) return@OnChangeListener
             videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(value.toLong())
         })
     }
 
     private fun onFastForwardTapped(){
+        if (exoPlayer.duration == C.TIME_UNSET) return
         if (exoPlayer.contentPosition >= (exoPlayer.duration-10000))
             exoPlayer.seekTo(exoPlayer.duration - 500)
         else
@@ -178,6 +178,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun onRewindTapped(){
+        if (exoPlayer.duration == C.TIME_UNSET) return
         if (exoPlayer.contentPosition <= (10000))
             exoPlayer.seekTo(0L)
         else
@@ -213,13 +214,14 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     private fun onProgressChanged(position: Float){
         if (sliderInTouch) return
         videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
-        videoPlayerControllerSeekbar.apply {
-            value = if (position >= valueTo) valueTo else position
-        }
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SubtitleProgressChanged(progress = exoPlayer.currentPosition)
             )
+        }
+        if (!durationSet) return
+        videoPlayerControllerSeekbar.apply {
+            value = if (position >= valueTo) valueTo else position
         }
     }
 
@@ -737,8 +739,15 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             ExoPlayer.STATE_READY -> {
+                Logger.e("${exoPlayer.duration}")
                 videoPlayerControllerSeekbar.valueFrom = 0f
-                videoPlayerControllerSeekbar.valueTo = exoPlayer.duration.toFloat()
+                if (exoPlayer.duration != C.TIME_UNSET){
+                    durationSet = true
+                    videoPlayerControllerSeekbar.valueTo = exoPlayer.duration.toFloat()
+                }else{
+                    durationSet = false
+                    videoPlayerControllerSeekbar.valueTo = (Long.MAX_VALUE).toFloat()
+                }
                 lifecycleScope.launch {
                     if (playWhenReady.not()) {
                         videoPlayerViewModel.intents.send(
@@ -784,6 +793,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun miliSecToFormatedTime(miliSec: Long): String{
+        if (miliSec < 0) return "--:--"
         val durationHourInt = (miliSec / (60*60*1000)).toInt()
         val durationMinInt = ((miliSec % (60*60*1000))/(60*1000)).toInt()
         val durationSecInt = ((miliSec % (60*1000))/1000).toInt()
