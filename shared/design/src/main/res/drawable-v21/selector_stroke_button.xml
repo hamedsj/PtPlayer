@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/colorSecondaryText" />
+            <corners android:radius="48dp" />
+        </shape>
+    </item>
+
+    <item android:state_enabled="true">
+        <ripple android:color="@color/colorRippleRevert">
+            <item
+                android:id="@android:id/mask">
+                <layer-list>
+                    <item android:drawable="@drawable/shape_stroke_text_button_pill" />
+                    <item>
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/colorDrawRippleRevert" />
+                            <corners android:radius="48dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+            <item android:drawable="@drawable/shape_stroke_text_button_pill" />
+        </ripple>
+    </item>
+
+</selector>

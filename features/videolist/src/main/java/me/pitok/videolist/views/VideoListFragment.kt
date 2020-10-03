@@ -1,25 +1,37 @@
 package me.pitok.videolist.views
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.ImageLoader
 import kotlinx.android.synthetic.main.fragment_video_list.*
-import kotlinx.coroutines.*
+import kotlinx.android.synthetic.main.merge_video_list_drawer.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.pitok.androidcore.qulifiers.ApplicationContext
+import me.pitok.design.views.EditTextBottomSheetView
 import me.pitok.lifecycle.ViewModelFactory
+import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
 import me.pitok.sdkextentions.getScreenWidth
+import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.videolist.R
 import me.pitok.videolist.di.builder.VideoListComponentBuilder
 import me.pitok.videolist.entities.FileEntity
@@ -28,9 +40,12 @@ import me.pitok.videolist.states.VideoListState
 import me.pitok.videolist.viewmodels.VideoListViewModel
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
-class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoListState> {
+@SuppressLint("RtlHardcoded")
+class VideoListFragment:
+    Fragment(R.layout.fragment_video_list),
+    MviView<VideoListState>,
+    DrawerLayout.DrawerListener {
 
     companion object{
         const val ANIMATION_DURATION = 100L
@@ -58,14 +73,18 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        videoListDrawerLayout.setScrimColor(Color.TRANSPARENT);
+        videoListDrawerLayout.addDrawerListener(this)
+        videoListDrawerIc.setOnClickListener(::onDrawerIcClickListener)
+        videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
         videoListEpoxyController = VideoListController(
             ::onFileClick,
-            ContextCompat.getColor(applicationContext,R.color.color_primary_light),
+            ContextCompat.getColor(applicationContext, R.color.color_primary_light),
             coilImageLoader,
             requireActivity().getScreenWidth()
         )
         videoListRv.apply {
-            layoutManager = GridLayoutManager(requireContext(),3)
+            layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = videoListEpoxyController.adapter
         }
         videoListViewModel.state.observe(this@VideoListFragment.viewLifecycleOwner, ::render)
@@ -79,8 +98,66 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
         getStoragePermissions()
         requireActivity()
             .onBackPressedDispatcher
-            .addCallback(viewLifecycleOwner,true){onBackPressed()}
+            .addCallback(viewLifecycleOwner, true){onBackPressed()}
 
+    }
+
+    private fun onNetworkStreamClick(view: View){
+        lifecycleScope.launch {
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main) {
+                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+            }
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main){
+                EditTextBottomSheetView(requireActivity()).apply {
+                    sheetTitle = getString(R.string.network_stream)
+                    primaryText = getString(R.string.play)
+                    secondaryText = getString(R.string.cancel)
+                    onSecondaryClick = {_->
+                        lifecycleScope.launch {
+                            delay(ANIMATION_DURATION)
+                            withContext(Dispatchers.Main){
+                                cancel()
+                            }
+                        }
+                    }
+                    onPrimaryClick = onPrimaryClick@ {path ->
+                        Logger.e("onPrimaryClick invoked")
+                        if (!path.isValidUrlWithProtocol()){
+                            Logger.e("onPrimaryClick isValidUrlWithProtocol not passed")
+                            Toast.makeText(applicationContext,"Invalid Url Path", Toast.LENGTH_SHORT).show()
+                            return@onPrimaryClick
+                        }
+                        Logger.e("onPrimaryClick isValidUrlWithProtocol passed")
+                        lifecycleScope.launch {
+                            delay(ANIMATION_DURATION)
+                            withContext(Dispatchers.Main){
+                                Intent(requireActivity(), VideoPlayerActivity::class.java).apply {
+                                    putExtra(
+                                        VideoPlayerActivity.DATA_SOURCE_TYPE_KEY,
+                                        VideoPlayerActivity.ONLINE_PATH_DATA_TYPE
+                                    )
+                                    putExtra(VideoPlayerActivity.DATA_SOURCE_KEY, path)
+                                    startActivity(this)
+                                }
+                                dismiss()
+                            }
+                        }
+                    }
+                    show()
+                }
+            }
+        }
+    }
+
+    private fun onDrawerIcClickListener(view: View){
+        lifecycleScope.launch{
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main){
+                videoListDrawerLayout.openDrawer(Gravity.RIGHT)
+            }
+        }
     }
 
     private fun onBackPressed(){
@@ -91,9 +168,8 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
                 videoListViewModel
                     .intents
                     .send(
-                        VideoListIntent.FetchFolders (
-                            contentResolver = this@VideoListFragment.
-                            requireActivity().contentResolver
+                        VideoListIntent.FetchFolders(
+                            contentResolver = this@VideoListFragment.requireActivity().contentResolver
                         )
                     )
             }
@@ -118,11 +194,11 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
             FileEntity.FILE_TYPE -> {
                 lifecycleScope.launch {
                     delay(ANIMATION_DURATION + CHANGE_ACTIVITY_DELAY_DURATION)
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         Intent(requireActivity(), VideoPlayerActivity::class.java).apply {
                             putExtra(
                                 VideoPlayerActivity.DATA_SOURCE_TYPE_KEY,
-                                VideoPlayerActivity.PATH_DATA_TYPE
+                                VideoPlayerActivity.LOCAL_PATH_DATA_TYPE
                             )
                             putExtra(VideoPlayerActivity.DATA_SOURCE_KEY, path)
                             startActivity(this)
@@ -157,5 +233,15 @@ class VideoListFragment: Fragment(R.layout.fragment_video_list), MviView<VideoLi
             ), 1
         )
     }
+
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+        videoListContent.translationX = -1 * drawerView.width * slideOffset
+    }
+
+    override fun onDrawerOpened(drawerView: View) {}
+
+    override fun onDrawerClosed(drawerView: View) {}
+
+    override fun onDrawerStateChanged(newState: Int) {}
 
 }

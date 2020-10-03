@@ -5,10 +5,10 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import me.pitok.design.entity.BottomSheetItemEntity
-import kotlinx.android.synthetic.main.item_bottom_sheet.view.itemIcon
-import kotlinx.android.synthetic.main.item_bottom_sheet.view.itemTitle
+import kotlinx.android.synthetic.main.item_chooser_bottom_sheet.view.itemIcon
+import kotlinx.android.synthetic.main.item_chooser_bottom_sheet.view.itemTitle
 
-internal class BottomSheetViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+internal class ChooserBottomSheetViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val itemIcon: AppCompatImageView = view.itemIcon
     private val itemTitle: AppCompatTextView = view.itemTitle
