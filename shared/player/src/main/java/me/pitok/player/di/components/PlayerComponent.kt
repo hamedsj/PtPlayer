@@ -2,6 +2,7 @@ package me.pitok.player.di.components
 
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import dagger.Component
 import me.pitok.androidcore.components.AndroidCoreComponent
 import me.pitok.dependencyinjection.shared.SharedScope
@@ -21,6 +22,8 @@ interface PlayerComponent{
     fun exposeDefaultBandwidthMeter(): DefaultBandwidthMeter
 
     fun exposeDefaultDataSourceFactory(): DefaultDataSourceFactory
+
+    fun exposeDefaultHttpDataSourceFactory(): DefaultHttpDataSourceFactory
 
     fun exposeExoPlayer(): IndictableSimpleExoPlayer
 }

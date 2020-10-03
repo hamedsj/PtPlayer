@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.pitok.androidcore.qulifiers.ApplicationContext
 import me.pitok.design.entity.BottomSheetItemEntity
-import me.pitok.design.views.BottomSheetView
+import me.pitok.design.views.ChooserBottomSheetView
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
@@ -54,7 +54,8 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     companion object{
         const val DATA_SOURCE_KEY = "datasource"
         const val DATA_SOURCE_TYPE_KEY = "datasourcetype"
-        const val PATH_DATA_TYPE = "path"
+        const val LOCAL_PATH_DATA_TYPE = "localpath"
+        const val ONLINE_PATH_DATA_TYPE = "onlinepath"
         const val FADE_IN_ANIM_DURATION = 150L
         const val FADE_OUT_ANIM_DURATION = 250L
         const val CHANGE_POSITION_ANIMATION_DURATION = 250L
@@ -119,7 +120,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
-        exoPlayer.prepare(videoPlayerViewModel.buildVideoSource())
+        videoPlayerViewModel.buildVideoSource()?.apply {
+            exoPlayer.prepare(this)
+        }?:apply {
+            Toast.makeText(context,"Invalid Url Path!",Toast.LENGTH_LONG).show()
+            finish()
+        }
         exoPlayer.addListener(this)
         exoPlayer.onPositionChanged = { position ->
             onProgressChanged(position.toFloat())
@@ -268,7 +274,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
         if (intent.action != null){
             try {
-                videoPlayerViewModel.datasourcetype = PATH_DATA_TYPE
+                videoPlayerViewModel.datasourcetype = LOCAL_PATH_DATA_TYPE
                 if (intent.data?.scheme == "content"){
                     videoPlayerViewModel.activePath = videoPlayerViewModel.getRealPathFromURI(
                         contentResolver,
@@ -292,10 +298,19 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             finish()
         }
         when(videoPlayerViewModel.datasourcetype){
-            PATH_DATA_TYPE -> {
+            LOCAL_PATH_DATA_TYPE -> {
                 intent.getStringExtra(DATA_SOURCE_KEY)?.run {
                     videoPlayerViewModel.activePath = this
                     videoPlayerViewModel.getFolderVideos(contentResolver)
+                } ?: run {
+                    Logger.e("video path not found")
+                    finish()
+                }
+            }
+            ONLINE_PATH_DATA_TYPE -> {
+                Logger.e("ONLINE_PATH_DATA_TYPE processing")
+                intent.getStringExtra(DATA_SOURCE_KEY)?.run {
+                    videoPlayerViewModel.activePath = this
                 } ?: run {
                     Logger.e("video path not found")
                     finish()
@@ -468,7 +483,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 )
             }
             is OptionsState.ShowMainMenu -> {
-                BottomSheetView(this).apply {
+                ChooserBottomSheetView(this).apply {
                     sheetTitle = ""
                     sheetItems = listOf(
                         BottomSheetItemEntity(
@@ -499,7 +514,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             is OptionsState.ShowSubtitleMenu -> {
-                BottomSheetView(this).apply {
+                ChooserBottomSheetView(this).apply {
                     sheetTitle = ""
                     sheetItems = listOf(
                         BottomSheetItemEntity(
@@ -517,7 +532,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             is OptionsState.ShowPlaybackSpeedMenu -> {
-                BottomSheetView(this).apply {
+                ChooserBottomSheetView(this).apply {
                     sheetTitle = ""
                     sheetItems = listOf(
                         BottomSheetItemEntity(
@@ -616,7 +631,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 )
                             }
                         }
-                        BottomSheetView(this@VideoPlayerActivity).apply {
+                        ChooserBottomSheetView(this@VideoPlayerActivity).apply {
                             sheetTitle = ""
                             sheetItems = audioTrackList
                             show()

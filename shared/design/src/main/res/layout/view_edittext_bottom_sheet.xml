@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/viewRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary"
+    >
+
+    <include layout="@layout/view_bottom_sheet_header" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/editTextBottomSheetEt"
+        android:maxHeight="160dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="16dp"
+        android:padding="8dp"
+        android:textColor="@color/color_high_text"
+        android:textSize="13dp"
+        android:fontFamily="@font/robotoslab_regular"
+        android:background="@drawable/shape_edittext_background_round"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sheetTitle"
+        tools:text="@tools:sample/lorem/random"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/editTextBottomSheetEt"
+        app:layout_constraintBottom_toBottomOf="parent"
+        >
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:id="@+id/editTextBottomSheetSecondaryBt"
+            android:layout_weight="1"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/selector_secondary_button"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/colorPrimaryLightText"
+            android:gravity="center"
+            tools:text="CANCEL"
+            android:fontFamily="@font/robotoslab_medium"
+            tools:ignore="RtlHardcoded" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:id="@+id/editTextBottomSheetPrimaryBt"
+            android:layout_weight="1"
+            android:focusable="true"
+            android:clickable="true"
+            tools:text="Play"
+            android:textColor="@color/colorPrimaryLightText"
+            android:gravity="center"
+            android:fontFamily="@font/robotoslab_medium"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/selector_primary_button"
+            tools:ignore="RtlHardcoded" />
+
+    </LinearLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

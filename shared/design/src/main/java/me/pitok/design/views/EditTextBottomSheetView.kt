@@ -4,27 +4,21 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import me.pitok.design.R
-import me.pitok.design.entity.BottomSheetItemEntity
 
-
-class BottomSheetView(
+class EditTextBottomSheetView(
     context: Context
 ) : BottomSheetDialog(context, R.style.AppBottomSheetDialogTheme) {
 
     private val bottomSheetTitle: AppCompatTextView
-
-    private val bottomSheetRecycler: RecyclerView
-
-    var dismissOnClick: Boolean = true
-
-
+    private val bottomSheetEditText: AppCompatEditText
+    private val bottomSheetPrimaryBt: AppCompatTextView
+    private val bottomSheetSecondaryBt: AppCompatTextView
 
     var sheetTitle: String = ""
         set(value) {
@@ -35,25 +29,36 @@ class BottomSheetView(
             field = value
         }
 
-    var sheetItems: List<BottomSheetItemEntity> = emptyList()
+    var onPrimaryClick: (String) -> Unit = {}
+    var onSecondaryClick: (String) -> Unit = {}
+    var primaryText: String = ""
         set(value) {
-            val adapter = BottomSheetAdapter(value) {
-                if (dismissOnClick) {
-                    dismiss()
-                }
-            }
-            bottomSheetRecycler.adapter = adapter
+            bottomSheetPrimaryBt.text = value
+            field = value
+        }
+    var secondaryText: String = ""
+        set(value) {
+            bottomSheetSecondaryBt.text = value
             field = value
         }
 
+
     init {
         val view = LayoutInflater.from(context)
-            .inflate(R.layout.view_bottom_sheet, null, false)
-        bottomSheetRecycler = view.findViewById(R.id.bottomSheetRecycler)
-        bottomSheetRecycler.layoutManager = LinearLayoutManager(context)
+            .inflate(R.layout.view_edittext_bottom_sheet, null, false)
         bottomSheetTitle = view.findViewById(R.id.sheetTitle)
+        bottomSheetEditText = view.findViewById(R.id.editTextBottomSheetEt)
+        bottomSheetPrimaryBt = view.findViewById(R.id.editTextBottomSheetPrimaryBt)
+        bottomSheetSecondaryBt = view.findViewById(R.id.editTextBottomSheetSecondaryBt)
         view.background = ContextCompat.getDrawable(context,R.drawable.shape_bottom_sheet_background)
         setContentView(view)
+
+        bottomSheetPrimaryBt.setOnClickListener{
+            onPrimaryClick.invoke(bottomSheetEditText.text.toString())
+        }
+        bottomSheetSecondaryBt.setOnClickListener{
+            onSecondaryClick.invoke(bottomSheetEditText.text.toString())
+        }
 
         // fix issue of not showing completely in landscape mode
         view.viewTreeObserver.addOnGlobalLayoutListener {

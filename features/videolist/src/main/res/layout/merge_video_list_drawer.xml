@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="@color/colorPrimaryDark"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/robotoslab_black"
+            android:gravity="center"
+            android:text="@string/ptplayer"
+            android:textColor="@color/colorPrimaryLightText" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/colorAccent" />
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/videoListDrawerNetwrokStreamClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@drawable/selector_click_rectangle"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/videoListDrawerNetwrokStreamIc"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:tint="@color/colorAccent"
+            android:src="@drawable/ic_online"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/videoListDrawerNetwrokStreamTitle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@+id/videoListDrawerNetwrokStreamIc"
+            android:gravity="center_vertical"
+            android:text="@string/network_stream"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textColor="@color/colorPrimaryLightText"/>
+
+    </RelativeLayout>
+
+</merge>

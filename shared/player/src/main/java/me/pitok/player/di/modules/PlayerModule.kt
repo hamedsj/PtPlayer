@@ -5,6 +5,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,14 @@ class PlayerModule {
         return DefaultDataSourceFactory(context,
             Util.getUserAgent(context, "PtPlayer"),
             defaultBandwidthMeter)
+    }
+
+    @Provides
+    @SharedScope
+    fun provideDefaultHttpDataSourceFactory(
+        @ApplicationContext context: Context
+    ): DefaultHttpDataSourceFactory{
+        return DefaultHttpDataSourceFactory(Util.getUserAgent(context, "PtPlayer"))
     }
 
     @Provides

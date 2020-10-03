@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
@@ -20,6 +21,7 @@ import me.pitok.datasource.otherwise
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
+import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.subtitle.entity.SubtitleEntity
 import me.pitok.subtitle.error.SubtitleError
 import me.pitok.subtitle.datasource.SubtitleReaderType
@@ -40,6 +42,7 @@ import kotlin.coroutines.CoroutineContext
 
 class VideoPlayerViewModel @Inject constructor(
     private val dataSourceFactory: DefaultDataSourceFactory,
+    private val httpDataSourceFactory: DefaultHttpDataSourceFactory,
     private val folderVideosReader: FolderVideosReadType,
     private val subtitleReader: SubtitleReaderType
 ) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
@@ -134,15 +137,32 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
-    fun buildVideoSource(): MediaSource {
+    fun buildVideoSource(): MediaSource? {
         return when(datasourcetype){
-            VideoPlayerActivity.PATH_DATA_TYPE -> {
+            VideoPlayerActivity.LOCAL_PATH_DATA_TYPE -> {
                 buildFromPath(requireNotNull(activePath))
+            }
+            VideoPlayerActivity.ONLINE_PATH_DATA_TYPE -> {
+                buildFromUrl(requireNotNull(activePath))
             }
             else -> {
                 buildFromPath(requireNotNull(activePath))
             }
         }
+    }
+
+    private fun buildFromUrl(url: String): MediaSource? {
+        Logger.e("buildFromUrl called")
+        if (!url.isValidUrlWithProtocol()) return null
+        val validUrl = if (!url.startsWith("http://") &&
+            !url.startsWith("https://")){
+            "http://$url"
+        }else{
+            url
+        }
+        return ProgressiveMediaSource
+            .Factory(httpDataSourceFactory)
+            .createMediaSource(Uri.parse(validUrl))
     }
 
     private fun buildFromPath(path: String): MediaSource {
