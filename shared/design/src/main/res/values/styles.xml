@@ -37,7 +37,13 @@
         <item name="bottomSheetStyle">@style/AppModalStyle</item>
     </style>
 
-    <style name="AppBottomSheetDialogTheme" parent="AppBottomSheetDialogTheme.Base" />
+    <style name="AppBottomSheetDialogTheme" parent="AppBottomSheetDialogTheme.Base" >
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@android:color/transparent</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
 
     <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@drawable/shape_bottom_sheet_background</item>

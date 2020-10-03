@@ -8,6 +8,11 @@
     <color name="colorSecondaryText">@color/color_medium_text</color>
     <color name="colorDisabledText">@color/color_disabled_text</color>
     <color name="colorDivider">@color/white_divider</color>
+    <color name="colorDividerRevert">@color/black_divider</color>
+    <color name="colorRipple">@color/black_22_opacity</color>
+    <color name="colorRippleRevert">@color/white_22_opacity</color>
+    <color name="colorDrawRipple">@color/black_22_opacity</color>
+    <color name="colorDrawRippleRevert">@color/white_22_opacity</color>
     <color name="colorHighlightText">#54000000</color>
 
 
@@ -37,6 +42,10 @@
     <color name="ripple_draw_color_revert">#8F000000</color>
 
     <color name="white_divider">#1FFFFFFF</color>
-
+    <color name="white_22_opacity">#38FFFFFF</color>
+    <color name="white_56_opacity">#8FFFFFFF</color>
+    <color name="black_divider">#1F000000</color>
+    <color name="black_22_opacity">#38000000</color>
+    <color name="black_56_opacity">#8F000000</color>
 
 </resources>

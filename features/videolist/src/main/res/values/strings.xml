@@ -2,4 +2,8 @@
 <resources>
     <string name="all">ALL</string>
     <string name="deeplink_video_list">pt://videolist</string>
+    <string name="network_stream">Network Stream</string>
+    <string name="ptplayer">PT PLAYER</string>
+    <string name="play">Play</string>
+    <string name="cancel">Cancel</string>
 </resources>
