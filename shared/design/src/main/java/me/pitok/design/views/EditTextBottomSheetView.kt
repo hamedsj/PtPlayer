@@ -41,6 +41,11 @@ class EditTextBottomSheetView(
             bottomSheetSecondaryBt.text = value
             field = value
         }
+    var editTextHint: String = ""
+        set(value) {
+            bottomSheetEditText.hint = value
+            field = value
+        }
 
 
     init {
@@ -54,10 +59,10 @@ class EditTextBottomSheetView(
         setContentView(view)
 
         bottomSheetPrimaryBt.setOnClickListener{
-            onPrimaryClick.invoke(bottomSheetEditText.text.toString())
+            onPrimaryClick.invoke(bottomSheetEditText.text.toString().trim())
         }
         bottomSheetSecondaryBt.setOnClickListener{
-            onSecondaryClick.invoke(bottomSheetEditText.text.toString())
+            onSecondaryClick.invoke(bottomSheetEditText.text.toString().trim())
         }
 
         // fix issue of not showing completely in landscape mode

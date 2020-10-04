@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
@@ -22,7 +23,9 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
 import kotlinx.android.synthetic.main.view_video_player_controller.*
@@ -120,11 +123,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
-        videoPlayerViewModel.buildVideoSource()?.apply {
-            exoPlayer.prepare(this)
-        }?:apply {
-            Toast.makeText(context,"Invalid Url Path!",Toast.LENGTH_LONG).show()
-            finish()
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Prepare)
+            )
         }
         exoPlayer.addListener(this)
         exoPlayer.onPositionChanged = { position ->
@@ -268,6 +270,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun getInitialData(savedInstanceState: Bundle?) {
+        Logger.e("getInitialData called")
         if (savedInstanceState == null) {
             videoPlayerViewModel.resumePosition = 0L
             videoPlayerViewModel.resumeWindow = 0
@@ -310,6 +313,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             ONLINE_PATH_DATA_TYPE -> {
                 Logger.e("ONLINE_PATH_DATA_TYPE processing")
                 intent.getStringExtra(DATA_SOURCE_KEY)?.run {
+                    Logger.e("videoPlayerViewModel.activePath = $this")
                     videoPlayerViewModel.activePath = this
                 } ?: run {
                     Logger.e("video path not found")
@@ -436,10 +440,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun render(state: VideoPlayerState) {
-        Logger.e("render($state)")
-        if (state is PlaybackState.Buffering){
-            videoPlayerLoadingAv.visibility = View.VISIBLE
-        }else{
+        if (state !is SubtitleState)
+            Logger.e("render($state)")
+        if (state !is PlaybackState.Buffering){
+            videoPlayerControllerPlayIc.visibility = View.VISIBLE
+            videoPlayerControllerBackIc.visibility = View.VISIBLE
+            videoPlayerControllerNextIc.visibility = View.VISIBLE
             videoPlayerLoadingAv.visibility = View.INVISIBLE
         }
         when(state){
@@ -461,6 +467,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
             }
+            is PlaybackState.Buffering -> {
+                videoPlayerControllerPlayIc.visibility = View.INVISIBLE
+                videoPlayerControllerBackIc.visibility = View.INVISIBLE
+                videoPlayerControllerNextIc.visibility = View.INVISIBLE
+                videoPlayerLoadingAv.visibility = View.VISIBLE
+            }
             is PLayerCommandState.Start -> {
                 exoPlayer.playWhenReady = true
             }
@@ -471,7 +483,17 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 exoPlayer.seekTo(state.position)
             }
             is PLayerCommandState.Prepare -> {
-                exoPlayer.prepare(state.mediaSource)
+                state.mediaSource?.apply {
+                    lifecycleScope.launch {
+                        videoPlayerViewModel.intents.send(
+                            VideoPlayerIntent.SetPlayBackState(PlaybackState.Buffering)
+                        )
+                    }
+                    exoPlayer.prepare(this)
+                }?:apply {
+                    Toast.makeText(context,"Invalid Url Path!", Toast.LENGTH_LONG).show()
+                    finish()
+                }
             }
             is PLayerCommandState.ChangeSpeed -> {
                 exoPlayer.setPlaybackParameters(
@@ -738,8 +760,10 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+        Logger.e("playWhenReady = $playWhenReady")
         when(playbackState){
             ExoPlayer.STATE_BUFFERING -> {
+                Logger.e("ExoPlayer.STATE_BUFFERING")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
                         VideoPlayerIntent.SetPlayBackState(PlaybackState.Buffering)
@@ -747,6 +771,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             ExoPlayer.STATE_ENDED -> {
+                Logger.e("ExoPlayer.STATE_ENDED")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
                         VideoPlayerIntent.SetPlayBackState(PlaybackState.Ended)
@@ -754,7 +779,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             ExoPlayer.STATE_READY -> {
-                Logger.e("${exoPlayer.duration}")
+                Logger.e("ExoPlayer.STATE_READY")
                 videoPlayerControllerSeekbar.valueFrom = 0f
                 if (exoPlayer.duration != C.TIME_UNSET){
                     durationSet = true
@@ -776,6 +801,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                 }
             }
             else -> {
+                Logger.e("ExoPlayer.STATE_IDLE")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
                         VideoPlayerIntent.SetPlayBackState(PlaybackState.WithoutVideoSource)
