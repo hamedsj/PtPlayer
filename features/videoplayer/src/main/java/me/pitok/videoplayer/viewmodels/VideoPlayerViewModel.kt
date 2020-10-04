@@ -22,10 +22,10 @@ import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
 import me.pitok.sdkextentions.isValidUrlWithProtocol
-import me.pitok.subtitle.entity.SubtitleEntity
-import me.pitok.subtitle.error.SubtitleError
 import me.pitok.subtitle.datasource.SubtitleReaderType
 import me.pitok.subtitle.datasource.SubtitleRequest
+import me.pitok.subtitle.entity.SubtitleEntity
+import me.pitok.subtitle.error.SubtitleError
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
@@ -88,6 +88,11 @@ class VideoPlayerViewModel @Inject constructor(
                             is PlayerControllerCommmand.Pause -> {
                                 pState.update {PLayerCommandState.Pause}
                             }
+                            is PlayerControllerCommmand.Prepare -> {
+                                pState.update {
+                                    PLayerCommandState.Prepare(buildVideoSource())
+                                }
+                            }
                             is PlayerControllerCommmand.ChangePlaybackSpeed -> {
                                 pState.update {
                                     PLayerCommandState.ChangeSpeed(
@@ -137,7 +142,7 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
-    fun buildVideoSource(): MediaSource? {
+    private fun buildVideoSource(): MediaSource? {
         return when(datasourcetype){
             VideoPlayerActivity.LOCAL_PATH_DATA_TYPE -> {
                 buildFromPath(requireNotNull(activePath))
@@ -160,6 +165,7 @@ class VideoPlayerViewModel @Inject constructor(
         }else{
             url
         }
+        Logger.e("url : $validUrl")
         return ProgressiveMediaSource
             .Factory(httpDataSourceFactory)
             .createMediaSource(Uri.parse(validUrl))

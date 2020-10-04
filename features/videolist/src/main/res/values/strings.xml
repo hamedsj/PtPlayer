@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="all">ALL</string>
     <string name="deeplink_video_list">pt://videolist</string>
     <string name="network_stream">Network Stream</string>
     <string name="ptplayer">PT PLAYER</string>
     <string name="play">Play</string>
     <string name="cancel">Cancel</string>
+    <string name="online_video_link" tools:ignore="ExtraTranslation">Online Video Link</string>
 </resources>
