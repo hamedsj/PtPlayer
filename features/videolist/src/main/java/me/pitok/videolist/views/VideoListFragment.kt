@@ -114,6 +114,7 @@ class VideoListFragment:
                     sheetTitle = getString(R.string.network_stream)
                     primaryText = getString(R.string.play)
                     secondaryText = getString(R.string.cancel)
+                    editTextHint = getString(R.string.online_video_link)
                     onSecondaryClick = {_->
                         lifecycleScope.launch {
                             delay(ANIMATION_DURATION)
