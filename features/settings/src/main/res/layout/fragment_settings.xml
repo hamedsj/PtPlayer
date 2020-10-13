@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/colorPrimary">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/settingsToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/colorPrimaryDark"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        >
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/settingsBackIc"
+            tools:ignore="RtlHardcoded"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="@color/colorAccent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/settingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/robotoslab_black"
+            android:maxLines="1"
+            android:text="@string/settings"
+            android:textColor="@color/colorPrimaryLightText"
+            android:layout_marginLeft="8dp"
+            android:textSize="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/settingsBackIc"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="RtlHardcoded,SpUsage" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/settingsPlayerCategoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:fontFamily="@font/robotoslab_black"
+        android:text="@string/player"
+        android:textColor="@color/colorPrimaryLightText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settingsToolbar" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@drawable/shape_category_round_rectangel"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsPlayerCategoryTitle"
+        app:layout_constraintEnd_toStartOf="@+id/settingsPlayerCategoryTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settingsPlayerCategoryTitle" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@drawable/shape_category_round_rectangel"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsPlayerCategoryTitle"
+        app:layout_constraintStart_toEndOf="@+id/settingsPlayerCategoryTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settingsPlayerCategoryTitle" />
+
+    <LinearLayout
+        android:id="@+id/settingsPlaybackSpeed"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/settingsPlayerCategoryTitle"
+        >
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorPrimaryLightText"
+            android:text="@string/default_playback_speed"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textSize="15dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            tools:ignore="SpUsage" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorSecondaryText"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textSize="14dp"
+            android:gravity="center_vertical|right"
+            android:paddingRight="16dp"
+            tools:text="2x"
+            tools:ignore="SpUsage" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/settingsPlaybackSpeedClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/selector_click_rectangle"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsPlaybackSpeed"
+        app:layout_constraintTop_toTopOf="@+id/settingsPlaybackSpeed" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
