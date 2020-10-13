@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Settings</string>
+    <string name="player">Player</string>
+    <string name="default_playback_speed">Default Playback Speed</string>
+</resources>

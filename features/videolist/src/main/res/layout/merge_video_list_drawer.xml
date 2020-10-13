@@ -8,7 +8,7 @@
 
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/videoListDrawerHeader"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:orientation="vertical">
@@ -29,6 +29,8 @@
 
     </LinearLayout>
 
+    <!--###########################################################-->
+
     <RelativeLayout
         android:id="@+id/videoListDrawerNetwrokStreamClickable"
         android:layout_width="match_parent"
@@ -36,7 +38,7 @@
         android:background="@drawable/selector_click_rectangle"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+        app:layout_constraintTop_toBottomOf="@+id/videoListDrawerHeader">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/videoListDrawerNetwrokStreamIc"
@@ -59,5 +61,39 @@
             android:textColor="@color/colorPrimaryLightText"/>
 
     </RelativeLayout>
+
+    <!--###########################################################-->
+
+    <RelativeLayout
+        android:id="@+id/videoListDrawerSettingsClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@drawable/selector_click_rectangle"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@+id/videoListDrawerNetwrokStreamClickable">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/videoListDrawerSettingsIc"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:tint="@color/colorAccent"
+            android:src="@drawable/ic_settings"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/videoListDrawerSettingsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@+id/videoListDrawerSettingsIc"
+            android:gravity="center_vertical"
+            android:text="@string/settings"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textColor="@color/colorPrimaryLightText"/>
+
+    </RelativeLayout>
+
 
 </merge>
