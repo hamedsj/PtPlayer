@@ -1,3 +1,4 @@
+include ':features:settings'
 include ':libraries:subtitle'
 include ':libraries:logger'
 include ':shared:player'

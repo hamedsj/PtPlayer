@@ -7,4 +7,5 @@
     <string name="play">Play</string>
     <string name="cancel">Cancel</string>
     <string name="online_video_link" tools:ignore="ExtraTranslation">Online Video Link</string>
+    <string name="settings">settings</string>
 </resources>
