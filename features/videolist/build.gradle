@@ -28,11 +28,13 @@ dependencies {
     implementation project(":libraries:videometadata")
     implementation project(":libraries:sdkextentions")
     implementation project(":libraries:androidcore")
+    implementation project(":libraries:navigation")
     implementation project(":libraries:datasource")
     implementation project(":libraries:lifecycle")
     implementation project(":libraries:logger")
     implementation project(":libraries:mvi")
     implementation project(":shared:design")
     implementation project(":features:videoplayer")
+    implementation project(":features:settings")
 
 }

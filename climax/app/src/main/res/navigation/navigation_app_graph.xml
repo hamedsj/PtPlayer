@@ -7,5 +7,6 @@
     tools:ignore="UnusedNavigation">
 
     <include app:graph="@navigation/navigation_video_list_graph" />
+    <include app:graph="@navigation/navigation_settings_graph" />
 
 </navigation>

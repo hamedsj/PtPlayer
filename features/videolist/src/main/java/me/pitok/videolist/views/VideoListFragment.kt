@@ -30,6 +30,7 @@ import me.pitok.design.views.EditTextBottomSheetView
 import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviView
+import me.pitok.navigation.observeNavigation
 import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.videolist.R
@@ -73,10 +74,12 @@ class VideoListFragment:
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        videoListViewModel.navigationObservable.observeNavigation(this)
         videoListDrawerLayout.setScrimColor(Color.TRANSPARENT);
         videoListDrawerLayout.addDrawerListener(this)
         videoListDrawerIc.setOnClickListener(::onDrawerIcClickListener)
         videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
+        videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
         videoListEpoxyController = VideoListController(
             ::onFileClick,
             ContextCompat.getColor(applicationContext, R.color.color_primary_light),
@@ -149,6 +152,19 @@ class VideoListFragment:
                     show()
                 }
             }
+        }
+    }
+
+    private fun onSettingsClick(view: View){
+        lifecycleScope.launch {
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main) {
+                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+            }
+            delay(ANIMATION_DURATION)
+            videoListViewModel.intents.send(
+                VideoListIntent.GoToDeepLink(getString(R.string.deeplink_settings))
+            )
         }
     }
 
@@ -236,7 +252,9 @@ class VideoListFragment:
     }
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-        videoListContent.translationX = -1 * drawerView.width * slideOffset
+        videoListContent?.apply {
+            translationX = -1 * drawerView.width * slideOffset
+        }
     }
 
     override fun onDrawerOpened(drawerView: View) {}
