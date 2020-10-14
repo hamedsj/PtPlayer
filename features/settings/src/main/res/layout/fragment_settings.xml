@@ -103,6 +103,7 @@
             tools:ignore="SpUsage" />
 
         <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/settingsSettedDefaultPlaybackSpeed"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

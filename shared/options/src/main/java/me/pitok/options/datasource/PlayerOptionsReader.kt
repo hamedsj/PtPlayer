@@ -12,9 +12,21 @@ class PlayerOptionsReader @Inject constructor(
 ): PlayerOptionsReadType {
     override suspend fun read(): PlayerOptionsEntity {
         return PlayerOptionsEntity(
-            settingsReader.read(Keys.PLAYER_DEFAULT_SPEED_KEY).toFloat(),
-            settingsReader.read(Keys.PLAYER_DEFAULT_SPEAKER_VOLUME_KEY).toFloat(),
-            (settingsReader.read(Keys.PLAYER_DEFAULT_LAYOUT_ORIENTATION_KEY) != "0")
+
+            settingsReader.read(Keys.PLAYER_DEFAULT_SPEED_KEY).run run@{
+                if (isNotEmpty()) this
+                else "1.0"
+            }.toFloat(),
+
+            settingsReader.read(Keys.PLAYER_DEFAULT_SPEAKER_VOLUME_KEY).run run@{
+                if (isNotEmpty()) this
+                else "1.0"
+            }.toFloat(),
+
+            (settingsReader.read(Keys.PLAYER_DEFAULT_LAYOUT_ORIENTATION_KEY).run run@{
+                if (isNotEmpty()) this
+                else "1"
+            } != "0")
             )
     }
 }

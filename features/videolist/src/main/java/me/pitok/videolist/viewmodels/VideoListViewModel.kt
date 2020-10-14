@@ -9,8 +9,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import me.pitok.datasource.ifSuccessful
+import me.pitok.lifecycle.SingleLiveData
 import me.pitok.lifecycle.update
 import me.pitok.mvi.MviModel
+import me.pitok.navigation.Navigate
 import me.pitok.videolist.entities.FileEntity
 import me.pitok.videolist.entities.FileEntity.Companion.FILE_TYPE
 import me.pitok.videolist.entities.FileEntity.Companion.FOLDER_TYPE
@@ -36,6 +38,9 @@ class VideoListViewModel @Inject constructor(
     private val pState = MutableLiveData<VideoListState>().apply { value = VideoListState() }
     override val state: LiveData<VideoListState>
         get() = pState
+
+    private val pNavigationObservable = SingleLiveData<Navigate>()
+    val navigationObservable : LiveData<Navigate> = pNavigationObservable
 
     var depth = ALL_FOLDER_DEPTH
 
@@ -66,6 +71,12 @@ class VideoListViewModel @Inject constructor(
                     is VideoListIntent.ClearVideoList -> {
                         clearVideoList()
                         depth = ALL_FOLDER_DEPTH
+                    }
+                    is VideoListIntent.GoToDeepLink -> {
+                        withContext(Dispatchers.Main) {
+                            pNavigationObservable.value =
+                                Navigate.ToDeepLink(deepLink = videoListIntent.deeplink)
+                        }
                     }
                 }
             }

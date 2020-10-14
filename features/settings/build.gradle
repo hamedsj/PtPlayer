@@ -19,7 +19,11 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$library.dagger"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:sharedpreferences")
     implementation project(":libraries:androidcore")
+    implementation project(":libraries:datasource")
     implementation project(":libraries:lifecycle")
+    implementation project(":shared:options")
     implementation project(":shared:design")
+    implementation project(":libraries:mvi")
 }
