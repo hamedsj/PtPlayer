@@ -4,6 +4,7 @@ import dagger.Component
 import me.pitok.androidcore.components.AndroidCoreComponent
 import me.pitok.dependencyinjection.feature.FeatureScope
 import me.pitok.lifecycle.ViewModelFactory
+import me.pitok.options.di.OptionsComponent
 import me.pitok.settings.views.SettingsFragment
 
 @FeatureScope
@@ -12,7 +13,8 @@ import me.pitok.settings.views.SettingsFragment
         SettingsViewModelModule::class,
     ],
     dependencies = [
-        AndroidCoreComponent::class
+        AndroidCoreComponent::class,
+        OptionsComponent::class
     ]
 )
 interface SettingsComponent {

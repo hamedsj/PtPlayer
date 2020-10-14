@@ -60,6 +60,7 @@ dependencies {
     implementation project(":libraries:androidcore")
     implementation project(":libraries:coroutines")
     implementation project(":features:videolist")
+    implementation project(":features:settings")
 
 }
 

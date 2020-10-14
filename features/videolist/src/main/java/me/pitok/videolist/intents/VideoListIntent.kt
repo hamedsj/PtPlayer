@@ -9,4 +9,5 @@ sealed class VideoListIntent(val contentResolver: ContentResolver? = null,
     class FetchFolderVideos(contentResolver: ContentResolver,
                             folderPath: String) : VideoListIntent(contentResolver, folderPath)
     object ClearVideoList: VideoListIntent()
+    class GoToDeepLink(val deeplink: String): VideoListIntent()
 }
