@@ -50,6 +50,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         settingsViewModel.navigationObservable.observeNavigation(this)
         settingsBackIc.setOnClickListener(::onBackClickListener)
         settingsPlaybackSpeedClickable.setOnClickListener(::onPlaybackSpeedOptionClick)
+        settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -66,6 +67,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    private fun onSpeakerVolumeOptionClick(view: View){
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            settingsViewModel.intents.send(
+                SettingsIntent.ShowSpeakerVolumeBottomSheetIntent
+            )
+        }
+    }
+
     private fun onBackClickListener(view: View){
         lifecycleScope.launch {
             settingsViewModel.intents.send(
@@ -77,8 +87,14 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
     override fun render(state: SettingsState) {
         when(state){
             is SettingsState.ShowSettedSettings -> {
-                settingsSettedDefaultPlaybackSpeed.text = state.defaultPlaybackSpeed
-                settingsSettedDefaultSpeakerVolume.text = state.defaultSpeakerVolume
+                state.defaultPlaybackSpeed?.let {
+                    settingsSettedDefaultPlaybackSpeed.text = it
+                }
+                state.defaultSpeakerVolume?.apply{
+                    settingsSettedDefaultSpeakerVolume.text = this
+                }?:apply {
+                    settingsSettedDefaultSpeakerVolume.text = getString(R.string.device_volume)
+                }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
                 ChooserBottomSheetView(this@SettingsFragment.requireActivity()).apply {
@@ -143,6 +159,25 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                             { changePlayBackSpeed(2f) }
                         )
                     )
+                    show()
+                }
+            }
+            is SettingsState.ShowSpeakerVolumeBottomSheet -> {
+                SpeakerVolumeBottomSheetView(this@SettingsFragment.requireActivity()).apply {
+                    primaryText = "Set"
+                    secondaryText = "CANCEL"
+                    defaultSpeakerVolume = state.defaultSpeakerVolume
+                    onPrimaryClick = {speakerVolumetoSet ->
+                        lifecycleScope.launch {
+                            settingsViewModel.intents.send(
+                                SettingsIntent.SetSpeakerVolume(speakerVolumetoSet)
+                            )
+                        }
+                        dismiss()
+                    }
+                    onSecondaryClick = {
+                        dismiss()
+                    }
                     show()
                 }
             }

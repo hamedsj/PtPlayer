@@ -26,7 +26,7 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel(), MviModel<SettingsState, SettingsIntent> {
 
     override val intents: Channel<SettingsIntent> = Channel(Channel.UNLIMITED)
-    private val pState = MutableLiveData<SettingsState>().apply {
+    private val pState = SingleLiveData<SettingsState>().apply {
         value = SettingsState.ShowSettedSettings()
     }
     override val state: LiveData<SettingsState>
@@ -38,6 +38,7 @@ class SettingsViewModel @Inject constructor(
     private var jobRefreshSettedOptions : CoroutineContext? = null
 
     var defaultPlaybackSpeed = 1f
+    private var defaultSpeakerVolume = -1
 
     init {
         handleIntents()
@@ -75,6 +76,42 @@ class SettingsViewModel @Inject constructor(
                             pNavigationObservable.value = Navigate.Up
                         }
                     }
+                    is SettingsIntent.ShowSpeakerVolumeBottomSheetIntent -> {
+                        withContext(Dispatchers.Main) {
+                            pState.update {
+                                SettingsState.ShowSpeakerVolumeBottomSheet(defaultSpeakerVolume)
+                            }
+                        }
+                    }
+                    is SettingsIntent.SetSpeakerVolume -> {
+                        playerOptionsWriter.write(
+                            if (intent.speakerVolume in 0..100) {
+                                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
+                                    intent.speakerVolume / 100f
+                                )
+                            }else{
+                                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
+                                    -1f
+                                )
+                            }
+                        )
+                        defaultSpeakerVolume = intent.speakerVolume
+                        withContext(Dispatchers.Main) {
+                            pState.update {
+                                intent.speakerVolume.let {
+                                    if (it != -1){
+                                        SettingsState.ShowSettedSettings(
+                                            defaultSpeakerVolume = "$it%"
+                                        )
+                                    }else{
+                                        SettingsState.ShowSettedSettings(
+                                            defaultSpeakerVolume = null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
             }
@@ -89,9 +126,10 @@ class SettingsViewModel @Inject constructor(
                 pState.update {
                     SettingsState.ShowSettedSettings(
                         defaultPlaybackSpeed = "${settedPlayerOptions.deafultSpeed}x",
-                        defaultSpeakerVolume = "${
-                            (settedPlayerOptions.defaultSpeakerVolume*100).toInt()
-                        }%"
+                        defaultSpeakerVolume = settedPlayerOptions.defaultSpeakerVolume.let{
+                            if (it == -1f) null
+                            else "${(settedPlayerOptions.defaultSpeakerVolume*100).toInt()}%"
+                        }
                     )
                 }
             }

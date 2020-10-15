@@ -9,6 +9,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
     implementation "androidx.appcompat:appcompat:$library.appcompat"
 
+    implementation "com.google.android.material:material:$library.material"
 
     implementation "androidx.constraintlayout:constraintlayout:$library.constraintlayout"
     implementation "androidx.navigation:navigation-fragment-ktx:$library.navigation"
