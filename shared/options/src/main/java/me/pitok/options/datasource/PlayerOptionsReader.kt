@@ -20,11 +20,10 @@ class PlayerOptionsReader @Inject constructor(
 
             settingsReader.read(Keys.PLAYER_DEFAULT_SPEAKER_VOLUME_KEY).run run@{
                 if (isNotEmpty()) this
-                else "1.0"
+                else "-1.0"
             }.toFloat().run {
                 when {
                     this > 1f -> 1f
-                    this < 0f -> 0f
                     else -> this
                 }
             },

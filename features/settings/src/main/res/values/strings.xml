@@ -13,4 +13,6 @@
     <string name="_1_75x">1.75x</string>
     <string name="_2x">2.0x</string>
     <string name="default_speaker_volume">Default Speaker Volume</string>
+    <string name="default_system_volume">Default System Volume</string>
+    <string name="device_volume">Device Volume</string>
 </resources>
