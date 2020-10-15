@@ -78,6 +78,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         when(state){
             is SettingsState.ShowSettedSettings -> {
                 settingsSettedDefaultPlaybackSpeed.text = state.defaultPlaybackSpeed
+                settingsSettedDefaultSpeakerVolume.text = state.defaultSpeakerVolume
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
                 ChooserBottomSheetView(this@SettingsFragment.requireActivity()).apply {
