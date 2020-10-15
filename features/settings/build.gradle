@@ -21,6 +21,7 @@ dependencies {
     implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:sharedpreferences")
     implementation project(":libraries:androidcore")
+    implementation project(":libraries:navigation")
     implementation project(":libraries:datasource")
     implementation project(":libraries:lifecycle")
     implementation project(":shared:options")

@@ -4,4 +4,12 @@
     <string name="settings">Settings</string>
     <string name="player">Player</string>
     <string name="default_playback_speed">Default Playback Speed</string>
+    <string name="_0_25x">0.25x</string>
+    <string name="_0_50x">0.5x</string>
+    <string name="_0_75x">0.75x</string>
+    <string name="_1x">1.0x</string>
+    <string name="_1_25x">1.25x</string>
+    <string name="_1_50x">1.5x</string>
+    <string name="_1_75x">1.75x</string>
+    <string name="_2x">2.0x</string>
 </resources>
