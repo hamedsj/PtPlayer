@@ -88,7 +88,10 @@ class SettingsViewModel @Inject constructor(
             withContext(Dispatchers.Main) {
                 pState.update {
                     SettingsState.ShowSettedSettings(
-                        defaultPlaybackSpeed = "${settedPlayerOptions.deafultSpeed}x"
+                        defaultPlaybackSpeed = "${settedPlayerOptions.deafultSpeed}x",
+                        defaultSpeakerVolume = "${
+                            (settedPlayerOptions.defaultSpeakerVolume*100).toInt()
+                        }%"
                     )
                 }
             }

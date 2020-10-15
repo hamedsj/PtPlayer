@@ -81,6 +81,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/settingsPlayerCategoryTitle" />
 
+    <!--######################################################-->
+
     <LinearLayout
         android:id="@+id/settingsPlaybackSpeed"
         android:layout_width="match_parent"
@@ -126,6 +128,54 @@
         android:background="@drawable/selector_click_rectangle"
         app:layout_constraintBottom_toBottomOf="@+id/settingsPlaybackSpeed"
         app:layout_constraintTop_toTopOf="@+id/settingsPlaybackSpeed" />
+
+    <!--######################################################-->
+
+    <LinearLayout
+        android:id="@+id/settingsSpeakerVolume"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/settingsPlaybackSpeedClickable"
+        >
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorPrimaryLightText"
+            android:text="@string/default_speaker_volume"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textSize="15dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            tools:ignore="SpUsage" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/settingsSettedDefaultSpeakerVolume"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorSecondaryText"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textSize="14dp"
+            android:gravity="center_vertical|right"
+            android:paddingRight="16dp"
+            tools:text="100%"
+            tools:ignore="SpUsage" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/settingsSpeakerVolumeClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/selector_click_rectangle"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsSpeakerVolume"
+        app:layout_constraintTop_toTopOf="@+id/settingsSpeakerVolume" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
