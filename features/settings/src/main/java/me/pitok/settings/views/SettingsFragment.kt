@@ -1,5 +1,6 @@
 package me.pitok.settings.views
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.View
@@ -52,6 +53,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         settingsPlaybackSpeedClickable.setOnClickListener(::onPlaybackSpeedOptionClick)
         settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
         settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
+        settingsSubtitleFontSizeClickable.setOnClickListener(::onSubtitleFontSizeOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -86,6 +88,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    private fun onSubtitleFontSizeOptionClick(view: View){
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            settingsViewModel.intents.send(
+                SettingsIntent.ShowSubtitleFontSizeBottomSheetIntent
+            )
+        }
+    }
+
     private fun onBackClickListener(view: View){
         lifecycleScope.launch {
             settingsViewModel.intents.send(
@@ -94,6 +105,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun render(state: SettingsState) {
         when(state){
             is SettingsState.ShowSettedSettings -> {
@@ -113,6 +125,11 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                             getString(R.string.portrait)
                 }?:apply {
                     settingsSettedDefaultScreenOrientation.text = getString(R.string.landscape)
+                }
+                state.subtitleFontSize?.apply{
+                    settingsSettedSubtitleFontSize.text = "${this}sp"
+                }?:apply {
+                    settingsSettedSubtitleFontSize.text = "18sp"
                 }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
@@ -223,6 +240,26 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                             { changeScreenOrientation(SettingsViewModel.PORTRAIT_ORIENTATION) }
                         )
                     )
+                    show()
+                }
+            }
+            is SettingsState.ShowSubtitleFontSizeBottomSheet ->{
+                SubtitleFontSizeBottomSheetView(this@SettingsFragment.requireActivity()).apply {
+                    sheetTitle = ""
+                    primaryText = "Set"
+                    secondaryText = "CANCEL"
+                    sliderPosition = settingsViewModel.subtitleFontSize
+                    onPrimaryClick = {fontSizeToSet ->
+                        lifecycleScope.launch {
+                            settingsViewModel.intents.send(
+                                SettingsIntent.SetSubtitleFontSize(fontSizeToSet)
+                            )
+                        }
+                        dismiss()
+                    }
+                    onSecondaryClick = {
+                        dismiss()
+                    }
                     show()
                 }
             }

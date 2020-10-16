@@ -47,6 +47,8 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!--######################################################-->
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/settingsPlayerCategoryTitle"
         android:layout_width="wrap_content"
@@ -225,5 +227,93 @@
         android:background="@drawable/selector_click_rectangle"
         app:layout_constraintBottom_toBottomOf="@+id/settingsScreenOrientation"
         app:layout_constraintTop_toTopOf="@+id/settingsScreenOrientation" />
+
+    <!--######################################################-->
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/settingsSubtitleCategoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/robotoslab_black"
+        android:layout_marginTop="24dp"
+        android:text="@string/subtitle"
+        android:textColor="@color/colorPrimaryLightText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settingsScreenOrientation" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@drawable/shape_category_round_rectangel"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsSubtitleCategoryTitle"
+        app:layout_constraintEnd_toStartOf="@+id/settingsSubtitleCategoryTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settingsSubtitleCategoryTitle" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@drawable/shape_category_round_rectangel"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsSubtitleCategoryTitle"
+        app:layout_constraintStart_toEndOf="@+id/settingsSubtitleCategoryTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settingsSubtitleCategoryTitle" />
+
+    <!--######################################################-->
+
+    <LinearLayout
+        android:id="@+id/settingsSubtitleFontSize"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/settingsSubtitleCategoryTitle"
+        >
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorPrimaryLightText"
+            android:text="@string/subtitle_font_size"
+            android:fontFamily="@font/robotoslab_medium"
+            android:maxLines="1"
+            android:textSize="15dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            tools:ignore="SpUsage" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/settingsSettedSubtitleFontSize"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/colorSecondaryText"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textSize="14dp"
+            android:gravity="center_vertical|right"
+            android:paddingRight="16dp"
+            tools:text="14sp"
+            tools:ignore="SpUsage" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/settingsSubtitleFontSizeClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/selector_click_rectangle"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsSubtitleFontSize"
+        app:layout_constraintTop_toTopOf="@+id/settingsSubtitleFontSize" />
+
+    <!--######################################################-->
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
