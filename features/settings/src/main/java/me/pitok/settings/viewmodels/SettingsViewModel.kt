@@ -25,6 +25,11 @@ class SettingsViewModel @Inject constructor(
     private val playerOptionsWriter: PlayerOptionsWriteType
 ) : ViewModel(), MviModel<SettingsState, SettingsIntent> {
 
+    companion object{
+        const val PORTRAIT_ORIENTATION = 0
+        const val LANDSCAPE_ORIENTATION = 1
+    }
+
     override val intents: Channel<SettingsIntent> = Channel(Channel.UNLIMITED)
     private val pState = SingleLiveData<SettingsState>().apply {
         value = SettingsState.ShowSettedSettings()
@@ -38,7 +43,8 @@ class SettingsViewModel @Inject constructor(
     private var jobRefreshSettedOptions : CoroutineContext? = null
 
     var defaultPlaybackSpeed = 1f
-    private var defaultSpeakerVolume = -1
+    var defaultSpeakerVolume = -1
+    var defaultScreenOrientation = LANDSCAPE_ORIENTATION
 
     init {
         handleIntents()
@@ -57,19 +63,7 @@ class SettingsViewModel @Inject constructor(
                         }
                     }
                     is SettingsIntent.SetPlaybackSpeed -> {
-                        playerOptionsWriter.write(
-                            PlayerOptionsToWriteEntity.DefaultPlaybackSpeedOption(
-                                intent.playbackSpeed
-                            )
-                        )
-                        defaultPlaybackSpeed = intent.playbackSpeed
-                        withContext(Dispatchers.Main) {
-                            pState.update {
-                                SettingsState.ShowSettedSettings(
-                                    defaultPlaybackSpeed = "${intent.playbackSpeed}x"
-                                )
-                            }
-                        }
+                        handleSetPlaybackSpeedIntent(intent)
                     }
                     is SettingsIntent.ExitFromSettings -> {
                         withContext(Dispatchers.Main){
@@ -79,38 +73,22 @@ class SettingsViewModel @Inject constructor(
                     is SettingsIntent.ShowSpeakerVolumeBottomSheetIntent -> {
                         withContext(Dispatchers.Main) {
                             pState.update {
-                                SettingsState.ShowSpeakerVolumeBottomSheet(defaultSpeakerVolume)
+                                SettingsState.ShowSpeakerVolumeBottomSheet
+                            }
+                        }
+                    }
+                    is SettingsIntent.ShowScreenOrientationBottomSheetIntent -> {
+                        withContext(Dispatchers.Main) {
+                            pState.update {
+                                SettingsState.ShowScreenOrientationBottomSheet
                             }
                         }
                     }
                     is SettingsIntent.SetSpeakerVolume -> {
-                        playerOptionsWriter.write(
-                            if (intent.speakerVolume in 0..100) {
-                                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
-                                    intent.speakerVolume / 100f
-                                )
-                            }else{
-                                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
-                                    -1f
-                                )
-                            }
-                        )
-                        defaultSpeakerVolume = intent.speakerVolume
-                        withContext(Dispatchers.Main) {
-                            pState.update {
-                                intent.speakerVolume.let {
-                                    if (it != -1){
-                                        SettingsState.ShowSettedSettings(
-                                            defaultSpeakerVolume = "$it%"
-                                        )
-                                    }else{
-                                        SettingsState.ShowSettedSettings(
-                                            defaultSpeakerVolume = null
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        handleSetSpeakerVolumeIntent(intent)
+                    }
+                    is SettingsIntent.SetScreenOrientation -> {
+                        handleSetScreenOrientationIntent(intent)
                     }
                 }
 
@@ -129,9 +107,74 @@ class SettingsViewModel @Inject constructor(
                         defaultSpeakerVolume = settedPlayerOptions.defaultSpeakerVolume.let{
                             if (it == -1f) null
                             else "${(settedPlayerOptions.defaultSpeakerVolume*100).toInt()}%"
-                        }
+                        },
+                        defaultScreenOrientation =
+                        if(settedPlayerOptions.landscape) LANDSCAPE_ORIENTATION
+                        else PORTRAIT_ORIENTATION
                     )
                 }
+            }
+        }
+    }
+
+    private suspend fun handleSetSpeakerVolumeIntent(intent: SettingsIntent.SetSpeakerVolume){
+        playerOptionsWriter.write(
+            if (intent.speakerVolume in 0..100) {
+                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
+                    intent.speakerVolume / 100f
+                )
+            }else{
+                PlayerOptionsToWriteEntity.DefaultSpeakerVolumeOption(
+                    -1f
+                )
+            }
+        )
+        defaultSpeakerVolume = intent.speakerVolume
+        withContext(Dispatchers.Main) {
+            pState.update {
+                intent.speakerVolume.let {
+                    if (it != -1){
+                        SettingsState.ShowSettedSettings(
+                            defaultSpeakerVolume = "$it%"
+                        )
+                    }else{
+                        SettingsState.ShowSettedSettings(
+                            defaultSpeakerVolume = null
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun handleSetPlaybackSpeedIntent(intent: SettingsIntent.SetPlaybackSpeed){
+        playerOptionsWriter.write(
+            PlayerOptionsToWriteEntity.DefaultPlaybackSpeedOption(
+                intent.playbackSpeed
+            )
+        )
+        defaultPlaybackSpeed = intent.playbackSpeed
+        withContext(Dispatchers.Main) {
+            pState.update {
+                SettingsState.ShowSettedSettings(
+                    defaultPlaybackSpeed = "${intent.playbackSpeed}x"
+                )
+            }
+        }
+    }
+
+    private suspend fun handleSetScreenOrientationIntent(intent: SettingsIntent.SetScreenOrientation){
+        playerOptionsWriter.write(
+            PlayerOptionsToWriteEntity.DefaultLayoutOrientationOption(
+                intent.screenOrientation == LANDSCAPE_ORIENTATION
+            )
+        )
+        defaultScreenOrientation = intent.screenOrientation
+        withContext(Dispatchers.Main) {
+            pState.update {
+                SettingsState.ShowSettedSettings(
+                    defaultScreenOrientation = intent.screenOrientation
+                )
             }
         }
     }
