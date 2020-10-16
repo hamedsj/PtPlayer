@@ -15,4 +15,7 @@
     <string name="default_speaker_volume">Default Speaker Volume</string>
     <string name="default_system_volume">Default System Volume</string>
     <string name="device_volume">Device Volume</string>
+    <string name="default_screen_orientation">Default Screen Orientation</string>
+    <string name="landscape">Landscape</string>
+    <string name="portrait">Portrait</string>
 </resources>

@@ -4,7 +4,9 @@ import me.pitok.mvi.MviState
 
 sealed class SettingsState: MviState{
     class ShowSettedSettings(val defaultPlaybackSpeed: String? = null,
-                             val defaultSpeakerVolume: String? = null): SettingsState()
+                             val defaultSpeakerVolume: String? = null,
+                             val defaultScreenOrientation: Int? = null): SettingsState()
     object ShowPlaybackSpeedMenu: SettingsState()
-    class ShowSpeakerVolumeBottomSheet(val defaultSpeakerVolume: Int): SettingsState()
+    object ShowSpeakerVolumeBottomSheet: SettingsState()
+    object ShowScreenOrientationBottomSheet: SettingsState()
 }
