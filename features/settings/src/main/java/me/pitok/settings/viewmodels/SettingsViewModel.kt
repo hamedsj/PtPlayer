@@ -13,7 +13,10 @@ import me.pitok.mvi.MviModel
 import me.pitok.navigation.Navigate
 import me.pitok.options.datasource.PlayerOptionsReadType
 import me.pitok.options.datasource.PlayerOptionsWriteType
+import me.pitok.options.datasource.SubtitleOptionsReadType
+import me.pitok.options.datasource.SubtitleOptionsWriteType
 import me.pitok.options.entity.PlayerOptionsToWriteEntity
+import me.pitok.options.entity.SubtitleOptionsToWriteEntity
 import me.pitok.settings.intents.SettingsIntent
 import me.pitok.settings.states.SettingsState
 import javax.inject.Inject
@@ -22,7 +25,9 @@ import kotlin.coroutines.CoroutineContext
 
 class SettingsViewModel @Inject constructor(
     private val playerOptionsReader: PlayerOptionsReadType,
-    private val playerOptionsWriter: PlayerOptionsWriteType
+    private val playerOptionsWriter: PlayerOptionsWriteType,
+    private val subtitleOptionsReader: SubtitleOptionsReadType,
+    private val subtitleOptionsWriter: SubtitleOptionsWriteType
 ) : ViewModel(), MviModel<SettingsState, SettingsIntent> {
 
     companion object{
@@ -45,6 +50,7 @@ class SettingsViewModel @Inject constructor(
     var defaultPlaybackSpeed = 1f
     var defaultSpeakerVolume = -1
     var defaultScreenOrientation = LANDSCAPE_ORIENTATION
+    var subtitleFontSize = 18
 
     init {
         handleIntents()
@@ -84,11 +90,21 @@ class SettingsViewModel @Inject constructor(
                             }
                         }
                     }
+                    is SettingsIntent.ShowSubtitleFontSizeBottomSheetIntent -> {
+                        withContext(Dispatchers.Main) {
+                            pState.update {
+                                SettingsState.ShowSubtitleFontSizeBottomSheet
+                            }
+                        }
+                    }
                     is SettingsIntent.SetSpeakerVolume -> {
                         handleSetSpeakerVolumeIntent(intent)
                     }
                     is SettingsIntent.SetScreenOrientation -> {
                         handleSetScreenOrientationIntent(intent)
+                    }
+                    is SettingsIntent.SetSubtitleFontSize -> {
+                        handleSetSubtitleFontSizeIntent(intent)
                     }
                 }
 
@@ -99,18 +115,31 @@ class SettingsViewModel @Inject constructor(
     private fun refreshSettedOptions() {
         jobRefreshSettedOptions = GlobalScope.launch(Dispatchers.IO){
             val settedPlayerOptions = playerOptionsReader.read()
+            val settedSubtitleOptions = subtitleOptionsReader.read()
             defaultPlaybackSpeed = settedPlayerOptions.deafultSpeed
+            defaultSpeakerVolume =
+                if (settedPlayerOptions.defaultSpeakerVolume == -1f)
+                    -1
+                else
+                    (settedPlayerOptions.defaultSpeakerVolume*100).toInt()
+            defaultScreenOrientation =
+                if (settedPlayerOptions.landscape) LANDSCAPE_ORIENTATION
+                else PORTRAIT_ORIENTATION
+            settedSubtitleOptions.fontSize?.let {
+                subtitleFontSize = it
+            }?:let {
+                subtitleFontSize = 18
+            }
             withContext(Dispatchers.Main) {
                 pState.update {
                     SettingsState.ShowSettedSettings(
-                        defaultPlaybackSpeed = "${settedPlayerOptions.deafultSpeed}x",
-                        defaultSpeakerVolume = settedPlayerOptions.defaultSpeakerVolume.let{
-                            if (it == -1f) null
-                            else "${(settedPlayerOptions.defaultSpeakerVolume*100).toInt()}%"
+                        defaultPlaybackSpeed = "${defaultPlaybackSpeed}x",
+                        defaultSpeakerVolume = defaultSpeakerVolume.let{
+                            if (it == -1) null
+                            else "$defaultSpeakerVolume%"
                         },
-                        defaultScreenOrientation =
-                        if(settedPlayerOptions.landscape) LANDSCAPE_ORIENTATION
-                        else PORTRAIT_ORIENTATION
+                        defaultScreenOrientation = defaultScreenOrientation,
+                        subtitleFontSize = subtitleFontSize
                     )
                 }
             }
@@ -174,6 +203,20 @@ class SettingsViewModel @Inject constructor(
             pState.update {
                 SettingsState.ShowSettedSettings(
                     defaultScreenOrientation = intent.screenOrientation
+                )
+            }
+        }
+    }
+
+    private suspend fun handleSetSubtitleFontSizeIntent(intent: SettingsIntent.SetSubtitleFontSize){
+        subtitleOptionsWriter.write(
+            SubtitleOptionsToWriteEntity.FontSizeOption(intent.size)
+        )
+        subtitleFontSize = intent.size
+        withContext(Dispatchers.Main) {
+            pState.update {
+                SettingsState.ShowSettedSettings(
+                    subtitleFontSize = intent.size
                 )
             }
         }
