@@ -3,10 +3,7 @@ package me.pitok.options.di
 import dagger.Binds
 import dagger.Module
 import me.pitok.dependencyinjection.shared.SharedScope
-import me.pitok.options.datasource.PlayerOptionsReadType
-import me.pitok.options.datasource.PlayerOptionsReader
-import me.pitok.options.datasource.PlayerOptionsWriteType
-import me.pitok.options.datasource.PlayerOptionsWriter
+import me.pitok.options.datasource.*
 
 @Module
 interface OptionsModule{
@@ -22,5 +19,18 @@ interface OptionsModule{
     fun providePlayerOptionsWriter(
         playerOptionsWriterImpl: PlayerOptionsWriter
     ): PlayerOptionsWriteType
+
+    @Binds
+    @SharedScope
+    fun provideSubtitleOptionsReader(
+        subtitleOptionsReaderImpl: SubtitleOptionsReader
+    ): SubtitleOptionsReadType
+
+    @Binds
+    @SharedScope
+    fun provideSubtitleOptionsWriter(
+        subtitleOptionsWriterImpl: SubtitleOptionsWriter
+    ): SubtitleOptionsWriteType
+
 
 }
