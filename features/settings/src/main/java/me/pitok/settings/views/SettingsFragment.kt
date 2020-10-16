@@ -51,6 +51,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         settingsBackIc.setOnClickListener(::onBackClickListener)
         settingsPlaybackSpeedClickable.setOnClickListener(::onPlaybackSpeedOptionClick)
         settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
+        settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -76,6 +77,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    private fun onScreenOrientationOptionClick(view: View){
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            settingsViewModel.intents.send(
+                SettingsIntent.ShowScreenOrientationBottomSheetIntent
+            )
+        }
+    }
+
     private fun onBackClickListener(view: View){
         lifecycleScope.launch {
             settingsViewModel.intents.send(
@@ -94,6 +104,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     settingsSettedDefaultSpeakerVolume.text = this
                 }?:apply {
                     settingsSettedDefaultSpeakerVolume.text = getString(R.string.device_volume)
+                }
+                state.defaultScreenOrientation?.apply{
+                    settingsSettedDefaultScreenOrientation.text =
+                        if (this == SettingsViewModel.LANDSCAPE_ORIENTATION)
+                            getString(R.string.landscape)
+                        else
+                            getString(R.string.portrait)
+                }?:apply {
+                    settingsSettedDefaultScreenOrientation.text = getString(R.string.landscape)
                 }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
@@ -166,7 +185,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                 SpeakerVolumeBottomSheetView(this@SettingsFragment.requireActivity()).apply {
                     primaryText = "Set"
                     secondaryText = "CANCEL"
-                    defaultSpeakerVolume = state.defaultSpeakerVolume
+                    defaultSpeakerVolume = settingsViewModel.defaultSpeakerVolume
                     onPrimaryClick = {speakerVolumetoSet ->
                         lifecycleScope.launch {
                             settingsViewModel.intents.send(
@@ -181,6 +200,40 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     show()
                 }
             }
+            is SettingsState.ShowScreenOrientationBottomSheet -> {
+                ChooserBottomSheetView(this@SettingsFragment.requireActivity()).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.defaultScreenOrientation ==
+                                SettingsViewModel.LANDSCAPE_ORIENTATION)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string.landscape,
+                            { changeScreenOrientation(SettingsViewModel.LANDSCAPE_ORIENTATION) }
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.defaultScreenOrientation ==
+                                SettingsViewModel.PORTRAIT_ORIENTATION)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.string.portrait,
+                            { changeScreenOrientation(SettingsViewModel.PORTRAIT_ORIENTATION) }
+                        )
+                    )
+                    show()
+                }
+            }
+        }
+    }
+
+    private fun changeScreenOrientation(orientation: Int){
+        lifecycleScope.launch {
+            settingsViewModel.intents.send(
+                SettingsIntent.SetScreenOrientation(orientation)
+            )
         }
     }
 
