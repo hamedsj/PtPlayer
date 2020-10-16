@@ -7,8 +7,10 @@ sealed class SettingsIntent: MviIntent {
     object ShowPlaybackSpeedMenuIntent: SettingsIntent()
     object ShowSpeakerVolumeBottomSheetIntent: SettingsIntent()
     object ShowScreenOrientationBottomSheetIntent: SettingsIntent()
+    object ShowSubtitleFontSizeBottomSheetIntent: SettingsIntent()
     object ExitFromSettings: SettingsIntent()
     class SetPlaybackSpeed(val playbackSpeed: Float): SettingsIntent()
     class SetSpeakerVolume(val speakerVolume: Int): SettingsIntent()
     class SetScreenOrientation(val screenOrientation: Int): SettingsIntent()
+    class SetSubtitleFontSize(val size: Int): SettingsIntent()
 }

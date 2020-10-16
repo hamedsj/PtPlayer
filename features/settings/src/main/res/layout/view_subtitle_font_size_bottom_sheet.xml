@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/viewRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary"
+    >
+
+    <include layout="@layout/view_bottom_sheet_header" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/subtitleFontSizeBottomSheetSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:fontFamily="@font/robotoslab_medium"
+        tools:text="14dp"
+        android:textColor="@color/colorSecondaryText"
+        app:layout_constraintBottom_toBottomOf="@+id/subtitleFontSizeBottomSheetTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/subtitleFontSizeBottomSheetTitle"
+        tools:ignore="RtlHardcoded" />
+
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/subtitleFontSizeBottomSheetTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:fontFamily="@font/robotoslab_medium"
+        android:text="@string/default_system_volume"
+        android:textColor="@color/colorPrimaryLightText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sheetTitle"
+        tools:ignore="RtlHardcoded" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/subtitleFontSizeBottomSheetSeekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        android:theme="@style/SliderMaterialTheme"
+        app:labelBehavior="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subtitleFontSizeBottomSheetTitle"
+        android:stepSize="1"
+        android:value="18"
+        android:valueFrom="14"
+        android:valueTo="22"
+        app:thumbColor="@color/colorAccent"
+        app:trackColorActive="@color/colorAccent"
+        app:trackColorInactive="@color/white_22_opacity" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/subtitleFontSizeBottomSheetSeekbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        >
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:id="@+id/subtitleFontSizeBottomSheetSecondaryBt"
+            android:layout_weight="1"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/selector_secondary_button"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/colorPrimaryLightText"
+            android:gravity="center"
+            tools:text="CANCEL"
+            android:fontFamily="@font/robotoslab_medium"
+            tools:ignore="RtlHardcoded" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:id="@+id/subtitleFontSizeBottomSheetPrimaryBt"
+            android:layout_weight="1"
+            android:focusable="true"
+            android:clickable="true"
+            tools:text="Set"
+            android:textColor="@color/colorPrimaryLightText"
+            android:gravity="center"
+            android:fontFamily="@font/robotoslab_medium"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/selector_primary_button"
+            tools:ignore="RtlHardcoded" />
+
+    </LinearLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
