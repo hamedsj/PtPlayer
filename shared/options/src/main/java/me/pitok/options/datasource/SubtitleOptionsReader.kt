@@ -17,7 +17,10 @@ class SubtitleOptionsReader @Inject constructor(
                 if (isNotEmpty()) this
                 else "18"
             }.toInt(),
-            null,
+            settingsReader.read(Keys.SUBTITLE_FONT_COLOR_KEY).run run@{
+                if (isNotEmpty()) this.toInt()
+                else null
+            },
             null
         )
     }

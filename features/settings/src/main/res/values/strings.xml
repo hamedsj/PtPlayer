@@ -20,4 +20,12 @@
     <string name="portrait">Portrait</string>
     <string name="subtitle">Subtitle</string>
     <string name="subtitle_font_size">Subtitle Font Size</string>
+    <string name="subtitle_text_color">Subtitle Text Color</string>
+    <string name="black">Black</string>
+    <string name="red">Red</string>
+    <string name="blue">Blue</string>
+    <string name="yellow">Yellow</string>
+    <string name="indigo">Indigo</string>
+    <string name="green">Green</string>
+    <string name="white">White</string>
 </resources>
