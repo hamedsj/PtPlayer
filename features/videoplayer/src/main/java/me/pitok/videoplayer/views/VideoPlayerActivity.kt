@@ -510,6 +510,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                     sheetItems = listOf(
                         BottomSheetItemEntity(
                             R.drawable.ic_closed_caption,
+                            itemSecondaryIconResource = null,
                             R.string.subtitle,
                             if (videoPlayerViewModel.isSubtitleReady())
                                 ::onSubtitleOptionClick
@@ -518,16 +519,19 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_speed,
+                            itemSecondaryIconResource = null,
                             R.string.playback_speed,
                             ::onPlaybackSpeedOptionClick
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_audio,
+                            itemSecondaryIconResource = null,
                             R.string.audio,
                             ::onAudioOptionClick
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_screen_rotation,
+                            itemSecondaryIconResource = null,
                             R.string.rotate_screen,
                             ::onScreenRotationOptionClick
                         )
@@ -541,11 +545,13 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                     sheetItems = listOf(
                         BottomSheetItemEntity(
                             R.drawable.ic_closed_caption,
+                            itemSecondaryIconResource = null,
                             R.string.choose_subtitle,
                             ::onSubtitleClick
                         ),
                         BottomSheetItemEntity(
                             R.drawable.ic_delete,
+                            itemSecondaryIconResource = null,
                             R.string.remove_subtitle,
                             ::onDeleteSubtitle
                         )
@@ -562,6 +568,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_25x,
                             { onChangePlayBackSpeed(0.25f) }
                         ),
@@ -570,6 +577,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_50x,
                             { onChangePlayBackSpeed(0.5f) }
                         ), BottomSheetItemEntity(
@@ -577,6 +585,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_75x,
                             { onChangePlayBackSpeed(0.75f) }
                         ), BottomSheetItemEntity(
@@ -584,6 +593,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1x,
                             { onChangePlayBackSpeed(1f) }
                         ), BottomSheetItemEntity(
@@ -591,6 +601,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_25x,
                             { onChangePlayBackSpeed(1.25f) }
                         ), BottomSheetItemEntity(
@@ -598,6 +609,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_50x,
                             { onChangePlayBackSpeed(1.5f) }
                         ), BottomSheetItemEntity(
@@ -605,6 +617,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_75x,
                             { onChangePlayBackSpeed(1.75f) }
                         ), BottomSheetItemEntity(
@@ -612,6 +625,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._2x,
                             { onChangePlayBackSpeed(2f) }
                         )
@@ -631,6 +645,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                     R.drawable.ic_check
                                 else
                                     null,
+                                itemSecondaryIconResource = null,
                                 R.string.disable_audio,
                                 {exoPlayer.disableAudioRenderer()},
                                 null
@@ -644,6 +659,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                                             R.drawable.ic_check
                                         else
                                             null,
+                                        itemSecondaryIconResource = null,
                                         null,
                                         {exoPlayer.selectTrackGroup(groupIndex)},
                                         DefaultTrackNameProvider(resources).getTrackName(

@@ -20,13 +20,25 @@
         android:layout_marginStart="16dp"
         tools:src="@drawable/ic_folder" />
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/itemSecondaryIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="16dp"
+        tools:src="@drawable/ic_folder" />
+
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/itemTitle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:textColor="@color/colorPrimaryLightText"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_toEndOf="@+id/itemIcon"
+        android:layout_toStartOf="@+id/itemSecondaryIcon"
         android:gravity="center_vertical"
         tools:text="Delete forever" />
 

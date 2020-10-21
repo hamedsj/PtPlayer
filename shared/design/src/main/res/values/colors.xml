@@ -15,6 +15,14 @@
     <color name="colorDrawRippleRevert">@color/white_22_opacity</color>
     <color name="colorHighlightText">#54000000</color>
 
+    <color name="colorSubtitleWhite">#ffffff</color>
+    <color name="colorSubtitleBlack">#000000</color>
+    <color name="colorSubtitleBlue">#0D47A1</color>
+    <color name="colorSubtitleGreen">#1B5E20</color>
+    <color name="colorSubtitleIndigo">#311B92</color>
+    <color name="colorSubtitleRed">#D50000</color>
+    <color name="colorSubtitleYellow">#F57F17</color>
+
 
     <color name="gray_50">#fafafa</color>
     <color name="gray_100">#f5f5f5</color>

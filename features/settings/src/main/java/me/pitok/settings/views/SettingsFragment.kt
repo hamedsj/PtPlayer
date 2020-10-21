@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -54,6 +55,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
         settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
         settingsSubtitleFontSizeClickable.setOnClickListener(::onSubtitleFontSizeOptionClick)
+        settingsSubtitleTextColorClickable.setOnClickListener(::onSubtitleTextColorOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -97,6 +99,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    private fun onSubtitleTextColorOptionClick(view: View){
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            settingsViewModel.intents.send(
+                SettingsIntent.ShowSubtitleTextColorBottomSheetIntent
+            )
+        }
+    }
+
     private fun onBackClickListener(view: View){
         lifecycleScope.launch {
             settingsViewModel.intents.send(
@@ -112,24 +123,49 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                 state.defaultPlaybackSpeed?.let {
                     settingsSettedDefaultPlaybackSpeed.text = it
                 }
-                state.defaultSpeakerVolume?.apply{
-                    settingsSettedDefaultSpeakerVolume.text = this
-                }?:apply {
+                state.defaultSpeakerVolume?.let{
+                    settingsSettedDefaultSpeakerVolume.text = it
+                }?:let {
                     settingsSettedDefaultSpeakerVolume.text = getString(R.string.device_volume)
                 }
-                state.defaultScreenOrientation?.apply{
+                state.defaultScreenOrientation?.let{
                     settingsSettedDefaultScreenOrientation.text =
-                        if (this == SettingsViewModel.LANDSCAPE_ORIENTATION)
+                        if (it == SettingsViewModel.LANDSCAPE_ORIENTATION)
                             getString(R.string.landscape)
                         else
                             getString(R.string.portrait)
-                }?:apply {
+                }?:let {
                     settingsSettedDefaultScreenOrientation.text = getString(R.string.landscape)
                 }
-                state.subtitleFontSize?.apply{
-                    settingsSettedSubtitleFontSize.text = "${this}sp"
-                }?:apply {
+                state.subtitleFontSize?.let{
+                    settingsSettedSubtitleFontSize.text = "${it}sp"
+                }?:let {
                     settingsSettedSubtitleFontSize.text = "18sp"
+                }
+                state.subtitleTextColor?.let{
+                    settingsSettedSubtitleTextColor.setImageResource(
+                        when (it) {
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite) ->
+                                R.drawable.shape_color_preview_white
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack) ->
+                               R.drawable.shape_color_preview_black
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed) ->
+                                R.drawable.shape_color_preview_red
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen) ->
+                                R.drawable.shape_color_preview_green
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue) ->
+                                R.drawable.shape_color_preview_blue
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow) ->
+                                R.drawable.shape_color_preview_yellow
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo) ->
+                                R.drawable.shape_color_preview_indigo
+                            else ->
+                                R.drawable.shape_color_preview_white
+                    })
+                }?:let {
+                    settingsSettedSubtitleTextColor.setImageResource(
+                        R.drawable.shape_color_preview_white
+                    )
                 }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
@@ -141,6 +177,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_25x,
                             { changePlayBackSpeed(0.25f) }
                         ),
@@ -149,6 +186,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_50x,
                             { changePlayBackSpeed(0.5f) }
                         ), BottomSheetItemEntity(
@@ -156,6 +194,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._0_75x,
                             { changePlayBackSpeed(0.75f) }
                         ), BottomSheetItemEntity(
@@ -163,6 +202,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1x,
                             { changePlayBackSpeed(1f) }
                         ), BottomSheetItemEntity(
@@ -170,6 +210,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_25x,
                             { changePlayBackSpeed(1.25f) }
                         ), BottomSheetItemEntity(
@@ -177,6 +218,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_50x,
                             { changePlayBackSpeed(1.5f) }
                         ), BottomSheetItemEntity(
@@ -184,6 +226,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._1_75x,
                             { changePlayBackSpeed(1.75f) }
                         ), BottomSheetItemEntity(
@@ -191,6 +234,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string._2x,
                             { changePlayBackSpeed(2f) }
                         )
@@ -227,6 +271,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string.landscape,
                             { changeScreenOrientation(SettingsViewModel.LANDSCAPE_ORIENTATION) }
                         ),
@@ -236,6 +281,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.ic_check
                             else
                                 null,
+                            itemSecondaryIconResource = null,
                             R.string.portrait,
                             { changeScreenOrientation(SettingsViewModel.PORTRAIT_ORIENTATION) }
                         )
@@ -243,7 +289,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     show()
                 }
             }
-            is SettingsState.ShowSubtitleFontSizeBottomSheet ->{
+            is SettingsState.ShowSubtitleFontSizeBottomSheet -> {
                 SubtitleFontSizeBottomSheetView(this@SettingsFragment.requireActivity()).apply {
                     sheetTitle = ""
                     primaryText = "Set"
@@ -260,6 +306,92 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     onSecondaryClick = {
                         dismiss()
                     }
+                    show()
+                }
+            }
+            is SettingsState.ShowSubtitleTextColorBottomSheet -> {
+                ChooserBottomSheetView(this@SettingsFragment.requireActivity()).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor == null ||
+                                    settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_white,
+                            R.string.white,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_black,
+                            R.string.black,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_red,
+                            R.string.red,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_green,
+                            R.string.green,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_blue,
+                            R.string.blue,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_yellow,
+                            R.string.yellow,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleTextColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_indigo,
+                            R.string.indigo,
+                            {changeSubtitleTextColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo))}
+                        )
+                    )
                     show()
                 }
             }
@@ -282,5 +414,12 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         }
     }
 
+    private fun changeSubtitleTextColor(color: Int){
+        lifecycleScope.launch {
+            settingsViewModel.intents.send(
+                SettingsIntent.SetSubtitleTextColor(color)
+            )
+        }
+    }
 
 }

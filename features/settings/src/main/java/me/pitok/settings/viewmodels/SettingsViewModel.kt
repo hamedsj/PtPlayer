@@ -51,6 +51,7 @@ class SettingsViewModel @Inject constructor(
     var defaultSpeakerVolume = -1
     var defaultScreenOrientation = LANDSCAPE_ORIENTATION
     var subtitleFontSize = 18
+    var subtitleTextColor: Int? = null
 
     init {
         handleIntents()
@@ -97,6 +98,13 @@ class SettingsViewModel @Inject constructor(
                             }
                         }
                     }
+                    is SettingsIntent.ShowSubtitleTextColorBottomSheetIntent -> {
+                        withContext(Dispatchers.Main) {
+                            pState.update {
+                                SettingsState.ShowSubtitleTextColorBottomSheet
+                            }
+                        }
+                    }
                     is SettingsIntent.SetSpeakerVolume -> {
                         handleSetSpeakerVolumeIntent(intent)
                     }
@@ -105,6 +113,9 @@ class SettingsViewModel @Inject constructor(
                     }
                     is SettingsIntent.SetSubtitleFontSize -> {
                         handleSetSubtitleFontSizeIntent(intent)
+                    }
+                    is SettingsIntent.SetSubtitleTextColor -> {
+                        handleSetSubtitleTextColorIntent(intent)
                     }
                 }
 
@@ -130,6 +141,7 @@ class SettingsViewModel @Inject constructor(
             }?:let {
                 subtitleFontSize = 18
             }
+            subtitleTextColor = settedSubtitleOptions.fontColor
             withContext(Dispatchers.Main) {
                 pState.update {
                     SettingsState.ShowSettedSettings(
@@ -139,7 +151,8 @@ class SettingsViewModel @Inject constructor(
                             else "$defaultSpeakerVolume%"
                         },
                         defaultScreenOrientation = defaultScreenOrientation,
-                        subtitleFontSize = subtitleFontSize
+                        subtitleFontSize = subtitleFontSize,
+                        subtitleTextColor = subtitleTextColor
                     )
                 }
             }
@@ -217,6 +230,20 @@ class SettingsViewModel @Inject constructor(
             pState.update {
                 SettingsState.ShowSettedSettings(
                     subtitleFontSize = intent.size
+                )
+            }
+        }
+    }
+
+    private suspend fun handleSetSubtitleTextColorIntent(intent: SettingsIntent.SetSubtitleTextColor){
+        subtitleOptionsWriter.write(
+            SubtitleOptionsToWriteEntity.FontColorOption(intent.color)
+        )
+        subtitleTextColor = intent.color
+        withContext(Dispatchers.Main) {
+            pState.update {
+                SettingsState.ShowSettedSettings(
+                    subtitleTextColor = intent.color
                 )
             }
         }
