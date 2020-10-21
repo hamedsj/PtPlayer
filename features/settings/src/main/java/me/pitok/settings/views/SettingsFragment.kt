@@ -3,6 +3,7 @@ package me.pitok.settings.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -39,12 +40,10 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
 
     private val settingsViewModel: SettingsViewModel by viewModels { viewModelFactory }
 
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         SettingsComponentBuilder.getComponent().inject(this)
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,6 +55,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
         settingsSubtitleFontSizeClickable.setOnClickListener(::onSubtitleFontSizeOptionClick)
         settingsSubtitleTextColorClickable.setOnClickListener(::onSubtitleTextColorOptionClick)
+        settingsSubtitleHighlightColorClickable.setOnClickListener(::onSubtitleHighlightColorOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -104,6 +104,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
             delay(CLICK_ANIMATION_DURATION)
             settingsViewModel.intents.send(
                 SettingsIntent.ShowSubtitleTextColorBottomSheetIntent
+            )
+        }
+    }
+
+    private fun onSubtitleHighlightColorOptionClick(view: View){
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            settingsViewModel.intents.send(
+                SettingsIntent.ShowSubtitleHighlightColorBottomSheetIntent
             )
         }
     }
@@ -166,6 +175,29 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     settingsSettedSubtitleTextColor.setImageResource(
                         R.drawable.shape_color_preview_white
                     )
+                }
+                state.subtitleHighlightColor?.let{
+                    settingsSettedSubtitleHighlightColor.setImageResource(
+                        when (it) {
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite) ->
+                                R.drawable.shape_color_preview_white
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack) ->
+                                R.drawable.shape_color_preview_black
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed) ->
+                                R.drawable.shape_color_preview_red
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen) ->
+                                R.drawable.shape_color_preview_green
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue) ->
+                                R.drawable.shape_color_preview_blue
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow) ->
+                                R.drawable.shape_color_preview_yellow
+                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo) ->
+                                R.drawable.shape_color_preview_indigo
+                            else ->
+                                android.R.color.transparent
+                        })
+                }?:let {
+                    settingsSettedSubtitleHighlightColor.setImageResource(android.R.color.transparent)
                 }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
@@ -395,6 +427,104 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     show()
                 }
             }
+            is SettingsState.ShowSubtitleHighlightColorBottomSheet -> {
+                ChooserBottomSheetView(this@SettingsFragment.requireActivity()).apply {
+                    sheetTitle = ""
+                    sheetItems = listOf(
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor == null ||
+                                settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),android.R.color.transparent))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            null,
+                            R.string.transparent,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),android.R.color.transparent)
+                            )}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_white,
+                            R.string.white,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_black,
+                            R.string.black,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_red,
+                            R.string.red,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_green,
+                            R.string.green,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_blue,
+                            R.string.blue,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_yellow,
+                            R.string.yellow,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow))}
+                        ),
+                        BottomSheetItemEntity(
+                            if (settingsViewModel.subtitleHighlightColor ==
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo))
+                                R.drawable.ic_check
+                            else
+                                null,
+                            R.drawable.shape_color_preview_indigo,
+                            R.string.indigo,
+                            {changeSubtitleHighlightColor(
+                                ContextCompat.getColor(requireContext(),R.color.colorSubtitleIndigo))}
+                        )
+                    )
+                    show()
+                }
+            }
         }
     }
 
@@ -418,6 +548,14 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.SetSubtitleTextColor(color)
+            )
+        }
+    }
+
+    private fun changeSubtitleHighlightColor(color: Int){
+        lifecycleScope.launch {
+            settingsViewModel.intents.send(
+                SettingsIntent.SetSubtitleHighlightColor(color)
             )
         }
     }
