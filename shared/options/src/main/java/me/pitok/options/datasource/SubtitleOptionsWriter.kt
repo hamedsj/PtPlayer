@@ -25,6 +25,11 @@ class SubtitleOptionsWriter @Inject constructor(
                     StoreModel(Keys.SUBTITLE_FONT_COLOR_KEY,input.color.toString())
                 )
             }
+            is SubtitleOptionsToWriteEntity.HighlightColorOption -> {
+                settingsWriter.write(
+                    StoreModel(Keys.SUBTITLE_HIGHLIGHT_COLOR_KEY,input.color.toString())
+                )
+            }
         }
 
     }

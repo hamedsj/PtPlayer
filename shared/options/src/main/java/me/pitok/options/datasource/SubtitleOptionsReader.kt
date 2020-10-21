@@ -21,7 +21,10 @@ class SubtitleOptionsReader @Inject constructor(
                 if (isNotEmpty()) this.toInt()
                 else null
             },
-            null
+            settingsReader.read(Keys.SUBTITLE_HIGHLIGHT_COLOR_KEY).run run@{
+                if (isNotEmpty()) this.toInt()
+                else null
+            }
         )
     }
 }
