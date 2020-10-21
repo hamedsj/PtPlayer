@@ -28,4 +28,6 @@
     <string name="indigo">Indigo</string>
     <string name="green">Green</string>
     <string name="white">White</string>
+    <string name="transparent">Transparent</string>
+    <string name="subtitle_highlight_color">Subtitle Highlight Color</string>
 </resources>

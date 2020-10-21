@@ -7,10 +7,12 @@ sealed class SettingsState: MviState{
                              val defaultSpeakerVolume: String? = null,
                              val defaultScreenOrientation: Int? = null,
                              val subtitleFontSize: Int? = null,
-                             val subtitleTextColor: Int? = null): SettingsState()
+                             val subtitleTextColor: Int? = null,
+                             val subtitleHighlightColor: Int? = null): SettingsState()
     object ShowPlaybackSpeedMenu: SettingsState()
     object ShowSpeakerVolumeBottomSheet: SettingsState()
     object ShowScreenOrientationBottomSheet: SettingsState()
     object ShowSubtitleFontSizeBottomSheet: SettingsState()
     object ShowSubtitleTextColorBottomSheet: SettingsState()
+    object ShowSubtitleHighlightColorBottomSheet: SettingsState()
 }
