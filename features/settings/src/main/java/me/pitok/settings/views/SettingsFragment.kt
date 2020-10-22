@@ -135,7 +135,11 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                 state.defaultSpeakerVolume?.let{
                     settingsSettedDefaultSpeakerVolume.text = it
                 }?:let {
-                    settingsSettedDefaultSpeakerVolume.text = getString(R.string.device_volume)
+                    settingsSettedDefaultSpeakerVolume.text =
+                        if (settingsViewModel.defaultSpeakerVolume == -1)
+                            getString(R.string.device_volume)
+                        else
+                            "${settingsViewModel.defaultSpeakerVolume}%"
                 }
                 state.defaultScreenOrientation?.let{
                     settingsSettedDefaultScreenOrientation.text =
@@ -144,12 +148,17 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                         else
                             getString(R.string.portrait)
                 }?:let {
-                    settingsSettedDefaultScreenOrientation.text = getString(R.string.landscape)
+                    settingsSettedDefaultScreenOrientation.text =
+                        if (settingsViewModel.defaultScreenOrientation ==
+                            SettingsViewModel.LANDSCAPE_ORIENTATION)
+                            getString(R.string.landscape)
+                        else
+                            getString(R.string.portrait)
                 }
                 state.subtitleFontSize?.let{
                     settingsSettedSubtitleFontSize.text = "${it}sp"
                 }?:let {
-                    settingsSettedSubtitleFontSize.text = "18sp"
+                    settingsSettedSubtitleFontSize.text = "${settingsViewModel.subtitleFontSize}sp"
                 }
                 state.subtitleTextColor?.let{
                     settingsSettedSubtitleTextColor.setImageResource(
@@ -172,9 +181,11 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 R.drawable.shape_color_preview_white
                     })
                 }?:let {
-                    settingsSettedSubtitleTextColor.setImageResource(
-                        R.drawable.shape_color_preview_white
-                    )
+                    if (settingsViewModel.subtitleTextColor == null) {
+                        settingsSettedSubtitleTextColor.setImageResource(
+                            R.drawable.shape_color_preview_white
+                        )
+                    }
                 }
                 state.subtitleHighlightColor?.let{
                     settingsSettedSubtitleHighlightColor.setImageResource(
@@ -197,9 +208,11 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                                 android.R.color.transparent
                         })
                 }?:let {
-                    settingsSettedSubtitleHighlightColor.setImageResource(
-                        R.drawable.shape_color_preview_black
-                    )
+                    if (settingsViewModel.subtitleHighlightColor == null) {
+                        settingsSettedSubtitleHighlightColor.setImageResource(
+                            R.drawable.shape_color_preview_black
+                        )
+                    }
                 }
             }
             is SettingsState.ShowPlaybackSpeedMenu -> {
