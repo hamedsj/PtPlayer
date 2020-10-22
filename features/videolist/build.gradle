@@ -36,5 +36,5 @@ dependencies {
     implementation project(":shared:design")
     implementation project(":features:videoplayer")
     implementation project(":features:settings")
-
+    implementation project(":features:about")
 }

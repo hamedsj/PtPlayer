@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="deeplink_about">pt://about</string>
+    <string name="about">About</string>
+    <string name="pt_player_github_repository">PT-PLAYER GITHUB REPOSITORY</string>
+    <string name="pt_player">PT_PLAYER</string>
+    <string name="about_version">0.0.1</string>
+    <string name="about_description">Thanks for trying out pt-player! This project is still in alpha and therefore missing features. If you find any bugs or want to make a suggestion, please check out the repository on Github and file the issue. This helps making Pt-Player better. Thanks!</string>
+</resources>

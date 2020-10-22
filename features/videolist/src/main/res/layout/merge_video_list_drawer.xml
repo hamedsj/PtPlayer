@@ -128,5 +128,38 @@
 
     </RelativeLayout>
 
+    <!--###########################################################-->
+
+    <RelativeLayout
+        android:id="@+id/videoListDrawerAboutClickable"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@drawable/selector_click_rectangle"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@+id/videoListDrawerFeedbackClickable">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/videoListDrawerAboutIc"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:tint="@color/colorAccent"
+            android:src="@drawable/ic_about"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/videoListDrawerAboutTitle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@+id/videoListDrawerAboutIc"
+            android:gravity="center_vertical"
+            android:text="@string/about"
+            android:fontFamily="@font/robotoslab_medium"
+            android:textColor="@color/colorPrimaryLightText"/>
+
+    </RelativeLayout>
+
 
 </merge>

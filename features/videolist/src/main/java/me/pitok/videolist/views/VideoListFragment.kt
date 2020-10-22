@@ -81,6 +81,7 @@ class VideoListFragment:
         videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
         videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
         videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
+        videoListDrawerAboutClickable.setOnClickListener(::onAboutClick)
         videoListEpoxyController = VideoListController(
             ::onFileClick,
             ContextCompat.getColor(applicationContext, R.color.color_primary_light),
@@ -169,6 +170,19 @@ class VideoListFragment:
             delay(ANIMATION_DURATION)
             videoListViewModel.intents.send(
                 VideoListIntent.GoToDeepLink(getString(R.string.deeplink_settings))
+            )
+        }
+    }
+
+    private fun onAboutClick(view: View){
+        lifecycleScope.launch {
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main) {
+                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+            }
+            delay(ANIMATION_DURATION)
+            videoListViewModel.intents.send(
+                VideoListIntent.GoToDeepLink(getString(R.string.deeplink_about))
             )
         }
     }
