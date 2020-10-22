@@ -693,9 +693,9 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
             is OptionsState.ChangeOrientation -> {
                 if (state.landscape &&
-                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
                     videoPlayerViewModel.playerLandscapeOrientation = true
-                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 } else if(!state.landscape &&
                     requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
                     videoPlayerViewModel.playerLandscapeOrientation = false
@@ -727,13 +727,13 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
         videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
         when (requestedOrientation){
-            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> {
                 videoPlayerViewModel.playerLandscapeOrientation = false
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
             else -> {
                 videoPlayerViewModel.playerLandscapeOrientation = true
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
         }
     }
