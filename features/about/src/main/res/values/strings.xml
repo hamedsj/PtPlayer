@@ -5,5 +5,6 @@
     <string name="pt_player_github_repository">PT-PLAYER GITHUB REPOSITORY</string>
     <string name="pt_player">PT_PLAYER</string>
     <string name="about_version">0.0.1</string>
-    <string name="about_description">Thanks for trying out pt-player! This project is still in alpha and therefore missing features. If you find any bugs or want to make a suggestion, please check out the repository on Github and file the issue. This helps making Pt-Player better. Thanks!</string>
+    <string name="about_description">Thanks for trying out PT-Player! The project is still in alpha phase and missing features as expected. If you find any bugs or you have any suggestions, feel free to check out the repository on GitHub and file an issue.
+It helps making PT-Player better. Thank you.</string>
 </resources>

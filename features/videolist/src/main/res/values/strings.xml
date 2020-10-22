@@ -10,6 +10,6 @@
     <string name="settings">Settings</string>
     <string name="help_and_feedback"><![CDATA[Help & Feedback]]></string>
     <string name="about">About</string>
-    <string name="permission_text">This app needs a permission from you to access to the videos of the device</string>
-    <string name="permit">PERMIT</string>
+    <string name="permission_text">This app needs access to videos in this device</string>
+    <string name="allow">ALLOW</string>
 </resources>
