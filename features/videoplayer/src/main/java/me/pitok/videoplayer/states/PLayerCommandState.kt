@@ -8,4 +8,5 @@ sealed class PLayerCommandState: VideoPlayerState() {
     class Prepare(val mediaSource: MediaSource?): PLayerCommandState()
     class SeekToPosition(val position : Long): PLayerCommandState()
     class ChangeSpeed(val speed: Float): PLayerCommandState()
+    class ChangeSpeakerVolume(val speakerVolume: Float): PLayerCommandState()
 }

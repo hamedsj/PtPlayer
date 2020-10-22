@@ -18,9 +18,12 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import me.pitok.datasource.ifSuccessful
 import me.pitok.datasource.otherwise
+import me.pitok.lifecycle.SingleLiveData
 import me.pitok.lifecycle.update
 import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
+import me.pitok.options.datasource.PlayerOptionsReadType
+import me.pitok.options.datasource.SubtitleOptionsReadType
 import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.subtitle.datasource.SubtitleReaderType
 import me.pitok.subtitle.datasource.SubtitleRequest
@@ -44,8 +47,10 @@ class VideoPlayerViewModel @Inject constructor(
     private val dataSourceFactory: DefaultDataSourceFactory,
     private val httpDataSourceFactory: DefaultHttpDataSourceFactory,
     private val folderVideosReader: FolderVideosReadType,
-    private val subtitleReader: SubtitleReaderType
-) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
+    private val subtitleReader: SubtitleReaderType,
+    private val playerOptionsReader: PlayerOptionsReadType,
+    private val subtitleOptionsReader: SubtitleOptionsReadType,
+    ) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
 
     var activePath : String? = null
     lateinit var datasourcetype: String
@@ -53,11 +58,16 @@ class VideoPlayerViewModel @Inject constructor(
     private val availibleSubtitleList = mutableListOf<SubtitleEntity>()
     private var activeSubtitlePath = ""
 
+    var subtitleTextSize = 18
+    var subtitleTextColor: Int? = null
+    var subtitleHighlightColor: Int? = null
+    var playerLandscapeOrientation = true
+
     var resumePosition = 0L
     var resumeWindow = 0
 
     override val intents: Channel<VideoPlayerIntent> = Channel(Channel.UNLIMITED)
-    private val pState = MutableLiveData<VideoPlayerState>().apply { value = VideoPlayerState() }
+    private val pState = SingleLiveData<VideoPlayerState>().apply { value = VideoPlayerState() }
     override val state: LiveData<VideoPlayerState>
         get() = pState
 
@@ -136,6 +146,29 @@ class VideoPlayerViewModel @Inject constructor(
                     is VideoPlayerIntent.RemoveSubtitle -> {
                         activeSubtitlePath = ""
                         availibleSubtitleList.clear()
+                    }
+                    is VideoPlayerIntent.SetInitialConfigsIntent -> {
+                        val playerOptions = playerOptionsReader.read()
+                        val subtitleOptions = subtitleOptionsReader.read()
+                        withContext(Dispatchers.Main){
+                            pState.update {
+                                PLayerCommandState.ChangeSpeed(playerOptions.deafultSpeed)
+                            }
+                            if (playerOptions.defaultSpeakerVolume != -1f){
+                                pState.update {
+                                    PLayerCommandState.ChangeSpeakerVolume(
+                                        playerOptions.defaultSpeakerVolume
+                                    )
+                                }
+                            }
+                            playerLandscapeOrientation = playerOptions.landscape
+                            pState.update {
+                                OptionsState.ChangeOrientation(playerOptions.landscape)
+                            }
+                            subtitleTextSize = requireNotNull(subtitleOptions.fontSize)
+                            subtitleTextColor = subtitleOptions.fontColor
+                            subtitleHighlightColor = subtitleOptions.highlightColor
+                        }
                     }
                 }
             }

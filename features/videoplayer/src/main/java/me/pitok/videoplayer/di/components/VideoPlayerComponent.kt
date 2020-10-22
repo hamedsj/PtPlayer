@@ -4,6 +4,7 @@ import dagger.Component
 import me.pitok.androidcore.components.AndroidCoreComponent
 import me.pitok.dependencyinjection.feature.FeatureScope
 import me.pitok.lifecycle.ViewModelFactory
+import me.pitok.options.di.OptionsComponent
 import me.pitok.player.di.components.PlayerComponent
 import me.pitok.subtitle.di.SubtitleComponent
 import me.pitok.videometadata.di.components.VideoMetadataComponent
@@ -19,7 +20,8 @@ import me.pitok.videoplayer.views.VideoPlayerActivity
         VideoMetadataComponent::class,
         AndroidCoreComponent::class,
         PlayerComponent::class,
-        SubtitleComponent::class
+        SubtitleComponent::class,
+        OptionsComponent::class
     ]
 )
 interface VideoPlayerComponent {
