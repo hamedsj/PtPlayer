@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
+import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -90,7 +91,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         Logger.w("OnCreate")
         VideoPlayerComponentBuilder.getComponent().inject(this)
         getInitialData(savedInstanceState)
-        setInitialViews()
+        setInitialViews(savedInstanceState)
         val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
         videoPlayerControllerHighlight.setOnTouchListener(object : View.OnTouchListener {
@@ -327,7 +328,15 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         }
     }
 
-    private fun setInitialViews() {
+    private fun setInitialViews(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                delay(CLICK_ANIMATION_DURATION)
+                videoPlayerViewModel.intents.send(
+                    VideoPlayerIntent.SetInitialConfigsIntent
+                )
+            }
+        }
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
@@ -504,6 +513,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                     )
                 )
             }
+            is PLayerCommandState.ChangeSpeakerVolume -> {
+                exoPlayer.volume =
+                    if (state.speakerVolume>1f) 1f
+                    else if (state.speakerVolume<0f) 0f
+                    else state.speakerVolume
+            }
             is OptionsState.ShowMainMenu -> {
                 ChooserBottomSheetView(this).apply {
                     sheetTitle = ""
@@ -676,11 +691,27 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                         }
                     }
             }
+            is OptionsState.ChangeOrientation -> {
+                if (state.landscape &&
+                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                    videoPlayerViewModel.playerLandscapeOrientation = true
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                } else if(!state.landscape &&
+                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                    videoPlayerViewModel.playerLandscapeOrientation = false
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+            }
             is SubtitleState.Clear -> {
                 subtitleTv.text = ""
             }
             is SubtitleState.Show -> {
                 Logger.e("Subtitle::: ${state.subText}")
+                subtitleTv.setTextColor(getSubtitleTextColor())
+                subtitleTv.setTextSize(
+                    TypedValue.COMPLEX_UNIT_SP,
+                    videoPlayerViewModel.subtitleTextSize.toFloat()
+                )
                 subtitleTv.text = getSubtitleSpannableFromString(state.subText)
             }
             is SubtitleState.SubtitleReadingError -> {
@@ -695,19 +726,37 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     private fun onScreenRotationOptionClick(){
         videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
         videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
-        requestedOrientation = when (requestedOrientation){
+        when (requestedOrientation){
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                videoPlayerViewModel.playerLandscapeOrientation = false
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
             else -> {
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                videoPlayerViewModel.playerLandscapeOrientation = true
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             }
+        }
+    }
+
+    private fun getSubtitleTextColor(): Int{
+        videoPlayerViewModel.subtitleTextColor?.let {
+            return it
+        }?:let{
+            return ContextCompat.getColor(applicationContext,R.color.colorSubtitleWhite)
+        }
+    }
+
+    private fun getSubtitleHighlightColor(): Int{
+        videoPlayerViewModel.subtitleHighlightColor?.let{
+            return it
+        }?:let {
+            return ContextCompat.getColor(context, R.color.colorHighlightText)
         }
     }
 
     private fun getSubtitleSpannableFromString(str: String): SpannableString {
         val subtitleBackgroundColorSpan = SubtitleBackgroundColorSpan(
-            ContextCompat.getColor(context, R.color.colorHighlightText),
+            getSubtitleHighlightColor(),
             8f.toPx().toFloat(),
             4f.toPx().toFloat()
         )
