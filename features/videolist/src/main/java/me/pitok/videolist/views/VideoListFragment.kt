@@ -49,6 +49,7 @@ class VideoListFragment:
     DrawerLayout.DrawerListener {
 
     companion object{
+        const val REQUEST_STORAGE_PERMISSION_CODE = 1001
         const val ANIMATION_DURATION = 100L
         const val CHANGE_ACTIVITY_DELAY_DURATION = 150L
     }
@@ -82,6 +83,7 @@ class VideoListFragment:
         videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
         videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
         videoListDrawerAboutClickable.setOnClickListener(::onAboutClick)
+        videoListPermitBt.setOnClickListener{getStoragePermissions()}
         videoListEpoxyController = VideoListController(
             ::onFileClick,
             ContextCompat.getColor(applicationContext, R.color.color_primary_light),
@@ -93,14 +95,22 @@ class VideoListFragment:
             adapter = videoListEpoxyController.adapter
         }
         videoListViewModel.state.observe(this@VideoListFragment.viewLifecycleOwner, ::render)
-        lifecycleScope.launch {
-            videoListViewModel.intents.send(
-                VideoListIntent.FetchFolders(
-                    contentResolver = this@VideoListFragment.requireActivity().contentResolver
+        if (!isStoragePermissionGranted()) {
+            videoListPermissionText.visibility = View.VISIBLE
+            videoListPermitBt.visibility = View.VISIBLE
+            videoListRv.visibility = View.INVISIBLE
+        } else {
+            videoListPermissionText.visibility = View.INVISIBLE
+            videoListPermitBt.visibility = View.INVISIBLE
+            videoListRv.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                videoListViewModel.intents.send(
+                    VideoListIntent.FetchFolders(
+                        contentResolver = this@VideoListFragment.requireActivity().contentResolver
+                    )
                 )
-            )
+            }
         }
-        getStoragePermissions()
         requireActivity()
             .onBackPressedDispatcher
             .addCallback(viewLifecycleOwner, true){onBackPressed()}
@@ -269,7 +279,7 @@ class VideoListFragment:
         videoListTitle.text = state.title
     }
 
-    private fun checkStoragePermissions(): Boolean {
+    private fun isStoragePermissionGranted(): Boolean {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             true
         else
@@ -278,12 +288,13 @@ class VideoListFragment:
     }
 
     private fun getStoragePermissions() {
-        if (checkStoragePermissions()) return
+        if (isStoragePermissionGranted()) return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
-        requireActivity().requestPermissions(
+        requestPermissions(
             arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE
-            ), 1
+            ),
+            REQUEST_STORAGE_PERMISSION_CODE
         )
     }
 
@@ -291,6 +302,28 @@ class VideoListFragment:
         videoListContent?.apply {
             translationX = -1 * drawerView.width * slideOffset
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == REQUEST_STORAGE_PERMISSION_CODE &&
+            grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED ){
+            videoListPermissionText.visibility = View.INVISIBLE
+            videoListPermitBt.visibility = View.INVISIBLE
+            videoListRv.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                videoListViewModel.intents.send(
+                    VideoListIntent.FetchFolders(
+                        contentResolver = this@VideoListFragment.requireActivity().contentResolver
+                    )
+                )
+            }
+        }
+        return
     }
 
     override fun onDrawerOpened(drawerView: View) {}
