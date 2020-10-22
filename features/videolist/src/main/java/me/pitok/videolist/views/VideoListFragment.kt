@@ -80,6 +80,7 @@ class VideoListFragment:
         videoListDrawerIc.setOnClickListener(::onDrawerIcClickListener)
         videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
         videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
+        videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
         videoListEpoxyController = VideoListController(
             ::onFileClick,
             ContextCompat.getColor(applicationContext, R.color.color_primary_light),
@@ -118,7 +119,7 @@ class VideoListFragment:
                     primaryText = getString(R.string.play)
                     secondaryText = getString(R.string.cancel)
                     editTextHint = getString(R.string.online_video_link)
-                    onSecondaryClick = {_->
+                    onSecondaryClick = { _->
                         lifecycleScope.launch {
                             delay(ANIMATION_DURATION)
                             withContext(Dispatchers.Main){
@@ -126,11 +127,15 @@ class VideoListFragment:
                             }
                         }
                     }
-                    onPrimaryClick = onPrimaryClick@ {path ->
+                    onPrimaryClick = onPrimaryClick@ { path ->
                         Logger.e("onPrimaryClick invoked")
                         if (!path.isValidUrlWithProtocol()){
                             Logger.e("onPrimaryClick isValidUrlWithProtocol not passed")
-                            Toast.makeText(applicationContext,"Invalid Url Path", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                applicationContext,
+                                "Invalid Url Path",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@onPrimaryClick
                         }
                         Logger.e("onPrimaryClick isValidUrlWithProtocol passed")
@@ -165,6 +170,23 @@ class VideoListFragment:
             videoListViewModel.intents.send(
                 VideoListIntent.GoToDeepLink(getString(R.string.deeplink_settings))
             )
+        }
+    }
+
+    private fun onFeedbackClick(view: View){
+        lifecycleScope.launch {
+            delay(ANIMATION_DURATION)
+            withContext(Dispatchers.Main) {
+                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+            }
+            delay(ANIMATION_DURATION)
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/html"
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf("hamedsj5@gmail.com"))
+                    putExtra(Intent.EXTRA_SUBJECT, "Suggestion for improving user exprience of PT-Player");
+                    startActivity(Intent.createChooser(this, "Send Email"))
+                }
+
         }
     }
 
