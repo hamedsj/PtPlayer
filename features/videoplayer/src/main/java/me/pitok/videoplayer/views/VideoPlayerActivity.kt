@@ -423,6 +423,12 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
         videoPlayerControllerBackIc.visibility = targetVisibility
         videoPlayerControllerSeekbar.visibility = targetVisibility
         videoPlayerControllerOptionsIc.visibility = targetVisibility
+        videoPlayerControllerPlayIc.isEnabled = visible
+        videoPlayerControllerNextIc.isEnabled = visible
+        videoPlayerControllerBackIc.isEnabled = visible
+        videoPlayerControllerSeekbar.isEnabled = visible
+        videoPlayerControllerOptionsIc.isEnabled = visible
+
     }
 
     override fun onResume() {
