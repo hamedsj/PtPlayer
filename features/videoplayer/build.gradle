@@ -25,6 +25,7 @@ dependencies {
     implementation "io.reactivex.rxjava3:rxandroid:$library.rxandroid"
 
     implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:sharedpreferences")
     implementation project(":libraries:sdkextentions")
     implementation project(":libraries:videometadata")
     implementation project(":libraries:androidcore")
@@ -32,6 +33,7 @@ dependencies {
     implementation project(":libraries:lifecycle")
     implementation project(":libraries:subtitle")
     implementation project(":libraries:logger")
+    implementation project(":shared:options")
     implementation project(":libraries:mvi")
     implementation project(":shared:design")
     implementation project(":shared:player")

@@ -2,6 +2,7 @@ package me.pitok.videoplayer.di.builder
 
 import me.pitok.androidcore.builder.AndroidCoreComponentBuilder
 import me.pitok.dependencyinjection.ComponentBuilder
+import me.pitok.options.di.OptionsComponentBuilder
 import me.pitok.player.di.builder.PlayerComponentBuilder
 import me.pitok.subtitle.di.SubtitleComponentBuilder
 import me.pitok.videometadata.di.builder.VideoMetadataComponentBuilder
@@ -16,6 +17,7 @@ object VideoPlayerComponentBuilder: ComponentBuilder<VideoPlayerComponent>(){
             .playerComponent(PlayerComponentBuilder.getComponent())
             .videoMetadataComponent(VideoMetadataComponentBuilder.getComponent())
             .subtitleComponent(SubtitleComponentBuilder.getComponent())
+            .optionsComponent(OptionsComponentBuilder.getComponent())
             .build()
     }
 }
