@@ -8,5 +8,6 @@
 
     <include app:graph="@navigation/navigation_video_list_graph" />
     <include app:graph="@navigation/navigation_settings_graph" />
+    <include app:graph="@navigation/navigation_about_graph" />
 
 </navigation>
