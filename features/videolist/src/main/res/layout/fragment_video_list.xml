@@ -99,7 +99,7 @@
             android:paddingRight="24dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
-            android:text="@string/permit"
+            android:text="@string/allow"
             android:fontFamily="@font/robotoslab_medium"
             android:gravity="center"
             android:textColor="@color/colorPrimaryLightText"
