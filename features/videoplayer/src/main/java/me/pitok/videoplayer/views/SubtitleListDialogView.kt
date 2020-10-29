@@ -9,10 +9,13 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import me.pitok.logger.Logger
 import me.pitok.sdkextentions.toPx
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.entity.ListDialogItemEntity
 import java.io.File
+import java.lang.Exception
+import java.lang.NullPointerException
 
 
 class SubtitleListDialogView(
@@ -30,14 +33,23 @@ class SubtitleListDialogView(
         dialogRecycler = view.findViewById(R.id.listDialogRecycler)
         dialogRecycler.layoutManager = LinearLayoutManager(context)
         dialogRecycler.adapter = SubtitleListDialogAdapter(items) {}
-        setFolderFileListToAdapter(Environment.getExternalStorageDirectory(), false)
+        setFolderFileListToAdapter(
+            try{
+            requireNotNull(
+                requireNotNull(Environment.getExternalStorageDirectory().parentFile)
+                    .parentFile
+            )
+            }catch (ignored: Exception){Environment.getExternalStorageDirectory()}
+        )
         setContentView(view)
         window?.setLayout(500f.toPx(), ViewGroup.LayoutParams.WRAP_CONTENT)
         window?.setGravity(Gravity.CENTER)
     }
 
-    private fun setFolderFileListToAdapter(folder: File, showParentFolder: Boolean = true){
-        val unsortedFiles = requireNotNull(folder.listFiles())
+    private fun setFolderFileListToAdapter(paramFolder: File){
+        val folder = if (isExternalStorageParent(paramFolder)) paramFolder.parentFile
+        else paramFolder
+        val unsortedFiles = folder.listFiles()?:run{arrayOf<File>()}
         val sortedFiles = unsortedFiles.sortedWith(object: Comparator<File> {
             override fun compare(file1: File?, file2: File?): Int {
                 if (file1 == null || file2 == null) return 0
@@ -52,7 +64,7 @@ class SubtitleListDialogView(
 
         })
         items.clear()
-        if (showParentFolder) {
+        if (canShowParentFolder(folder)) {
             items.add(
                 ListDialogItemEntity(
                     itemUnique = folder.parentFile?.absolutePath,
@@ -63,10 +75,15 @@ class SubtitleListDialogView(
             )
         }
         sortedFiles.forEach { file ->
-            if (file.isDirectory && requireNotNull(file.listFiles()).isNotEmpty()){
+            if (isReadableAndNotEmptyFolder(file)){
                 items.add(
                     ListDialogItemEntity(
-                        itemUnique = file.absolutePath,
+                        itemUnique =
+                        if (!isExternalStorageParent(file))
+                            file.absolutePath
+                        else
+                            Environment.getExternalStorageDirectory().absolutePath
+                        ,
                         itemIconResource = R.drawable.ic_folder,
                         itemTitleResource = file.name,
                         itemOnClickListener = ::onItemClickListener
@@ -86,14 +103,39 @@ class SubtitleListDialogView(
         dialogRecycler.adapter?.notifyDataSetChanged()
     }
 
+    private fun canShowParentFolder(folder: File): Boolean {
+        if (folder.absolutePath ==
+            try{
+                requireNotNull(
+                    requireNotNull(
+                        Environment.getExternalStorageDirectory().parentFile
+                    ).parentFile
+                )
+            }catch (ignored:Exception){
+                Environment.getExternalStorageDirectory()
+            }.absolutePath
+        ) return false
+        return true
+    }
+
+    private fun isExternalStorageParent(file: File): Boolean {
+        return file.absolutePath == Environment.getExternalStorageDirectory().parentFile.absolutePath
+    }
+
+    private fun isReadableAndNotEmptyFolder(file: File): Boolean {
+        if (isExternalStorageParent(file))
+            return true
+        if (file.isDirectory && file.listFiles() != null && file.listFiles().isNotEmpty())
+            return true
+        return false
+    }
+
     private fun onItemClickListener(path: String?){
+        Logger.d("onItemClickListener called : $path")
         if (path == null) return
         val file = File(path)
         if (file.isDirectory){
-            setFolderFileListToAdapter(
-                file,
-                file.absolutePath != Environment.getExternalStorageDirectory().absolutePath
-            )
+            setFolderFileListToAdapter(file)
             return
         }
         if (!file.path.endsWith(".srt")) return
