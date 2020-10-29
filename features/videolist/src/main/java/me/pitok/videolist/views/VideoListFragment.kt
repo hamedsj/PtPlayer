@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
@@ -33,6 +34,7 @@ import me.pitok.mvi.MviView
 import me.pitok.navigation.observeNavigation
 import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.sdkextentions.isValidUrlWithProtocol
+import me.pitok.sdkextentions.toPx
 import me.pitok.videolist.R
 import me.pitok.videolist.di.builder.VideoListComponentBuilder
 import me.pitok.videolist.entities.FileEntity
@@ -84,6 +86,12 @@ class VideoListFragment:
         videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
         videoListDrawerAboutClickable.setOnClickListener(::onAboutClick)
         videoListPermitBt.setOnClickListener{getStoragePermissions()}
+        videoListBackIc.setOnClickListener{
+            lifecycleScope.launch{
+                delay(ANIMATION_DURATION)
+                withContext(Dispatchers.Main){onBackPressed()}
+            }
+        }
         videoListEpoxyController = VideoListController(
             ::onFileClick,
             ContextCompat.getColor(applicationContext, R.color.color_primary_light),
@@ -275,6 +283,17 @@ class VideoListFragment:
     override fun render(state: VideoListState) {
         videoListEpoxyController.items = state.items
         videoListEpoxyController.requestModelBuild()
+        if (state.sub_folder){
+            videoListBackIc.visibility = View.VISIBLE
+            val lp = videoListTitle.layoutParams as ConstraintLayout.LayoutParams
+            lp.leftMargin = 8f.toPx()
+            videoListTitle.layoutParams = lp
+        }else{
+            videoListBackIc.visibility = View.GONE
+            val lp = videoListTitle.layoutParams as ConstraintLayout.LayoutParams
+            lp.leftMargin = 24f.toPx()
+            videoListTitle.layoutParams = lp
+        }
         (videoListRv.layoutManager as GridLayoutManager).spanCount = if (state.sub_folder) 2 else 3
         videoListTitle.text = state.title
     }

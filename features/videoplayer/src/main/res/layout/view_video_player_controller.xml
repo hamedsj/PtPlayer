@@ -123,8 +123,8 @@
         tools:ignore="RtlHardcoded,SpUsage" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:id="@+id/videoPlayerControllerOptionsIc"
         android:padding="8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
@@ -133,6 +133,20 @@
         android:layout_marginTop="24dp"
         android:layout_marginRight="24dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="RtlHardcoded" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/videoPlayerControllerNavigateBackIc"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_arrow_back"
+        android:tint="@color/colorAccent"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="24dp"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="RtlHardcoded" />
 

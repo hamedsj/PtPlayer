@@ -39,6 +39,22 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="RtlHardcoded" />
 
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:id="@+id/videoListBackIc"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginLeft="8dp"
+                android:padding="8dp"
+                android:animateLayoutChanges="true"
+                android:visibility="gone"
+                android:src="@drawable/ic_arrow_back"
+                android:tint="@color/colorAccent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="RtlHardcoded" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/videoListTitle"
                 android:layout_width="wrap_content"
@@ -50,7 +66,7 @@
                 android:textColor="@color/colorPrimaryLightText"
                 android:textSize="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/videoListBackIc"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="RtlHardcoded,SpUsage" />
 
