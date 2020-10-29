@@ -143,17 +143,18 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                 }
                 state.defaultScreenOrientation?.let{
                     settingsSettedDefaultScreenOrientation.text =
-                        if (it == SettingsViewModel.LANDSCAPE_ORIENTATION)
-                            getString(R.string.landscape)
-                        else
-                            getString(R.string.portrait)
+                        when (it) {
+                            SettingsViewModel.LANDSCAPE_ORIENTATION -> getString(R.string.landscape)
+                            SettingsViewModel.PORTRAIT_ORIENTATION -> getString(R.string.portrait)
+                            else -> getString(R.string.auto_detect)
+                        }
                 }?:let {
                     settingsSettedDefaultScreenOrientation.text =
-                        if (settingsViewModel.defaultScreenOrientation ==
-                            SettingsViewModel.LANDSCAPE_ORIENTATION)
-                            getString(R.string.landscape)
-                        else
-                            getString(R.string.portrait)
+                        when (settingsViewModel.defaultScreenOrientation) {
+                            SettingsViewModel.LANDSCAPE_ORIENTATION -> getString(R.string.landscape)
+                            SettingsViewModel.PORTRAIT_ORIENTATION -> getString(R.string.portrait)
+                            else -> getString(R.string.auto_detect)
+                        }
                 }
                 state.subtitleFontSize?.let{
                     settingsSettedSubtitleFontSize.text = "${it}sp"
@@ -313,6 +314,15 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     sheetTitle = ""
                     sheetItems = listOf(
                         BottomSheetItemEntity(
+                            if (settingsViewModel.defaultScreenOrientation ==
+                                SettingsViewModel.AUTO_ORIENTATION)
+                                R.drawable.ic_check
+                            else
+                                null,
+                            itemSecondaryIconResource = null,
+                            R.string.auto_detect,
+                            { changeScreenOrientation(SettingsViewModel.AUTO_ORIENTATION) }
+                        ),BottomSheetItemEntity(
                             if (settingsViewModel.defaultScreenOrientation ==
                                 SettingsViewModel.LANDSCAPE_ORIENTATION)
                                 R.drawable.ic_check

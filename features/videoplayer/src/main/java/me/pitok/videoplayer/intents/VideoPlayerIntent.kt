@@ -13,6 +13,7 @@ sealed class VideoPlayerIntent(): MviIntent {
     class LoadSubtitle(val path: String): VideoPlayerIntent()
     object RemoveSubtitle: VideoPlayerIntent()
     class SubtitleProgressChanged(val progress: Long): VideoPlayerIntent()
+    class VideoSizeChanged(val width: Int, val height: Int): VideoPlayerIntent()
 }
 
 sealed class PlayerControllerCommmand{

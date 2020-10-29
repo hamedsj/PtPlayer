@@ -33,6 +33,7 @@ class SettingsViewModel @Inject constructor(
     companion object{
         const val PORTRAIT_ORIENTATION = 0
         const val LANDSCAPE_ORIENTATION = 1
+        const val AUTO_ORIENTATION = 2
     }
 
     override val intents: Channel<SettingsIntent> = Channel(Channel.UNLIMITED)
@@ -49,7 +50,7 @@ class SettingsViewModel @Inject constructor(
 
     var defaultPlaybackSpeed = 1f
     var defaultSpeakerVolume = -1
-    var defaultScreenOrientation = LANDSCAPE_ORIENTATION
+    var defaultScreenOrientation = AUTO_ORIENTATION
     var subtitleFontSize = 18
     var subtitleTextColor: Int? = null
     var subtitleHighlightColor: Int? = null
@@ -144,9 +145,7 @@ class SettingsViewModel @Inject constructor(
                     -1
                 else
                     (settedPlayerOptions.defaultSpeakerVolume*100).toInt()
-            defaultScreenOrientation =
-                if (settedPlayerOptions.landscape) LANDSCAPE_ORIENTATION
-                else PORTRAIT_ORIENTATION
+            defaultScreenOrientation = settedPlayerOptions.orientation
             settedSubtitleOptions.fontSize?.let {
                 subtitleFontSize = it
             }?:let {
@@ -221,7 +220,7 @@ class SettingsViewModel @Inject constructor(
     private suspend fun handleSetScreenOrientationIntent(intent: SettingsIntent.SetScreenOrientation){
         playerOptionsWriter.write(
             PlayerOptionsToWriteEntity.DefaultLayoutOrientationOption(
-                intent.screenOrientation == LANDSCAPE_ORIENTATION
+                intent.screenOrientation
             )
         )
         defaultScreenOrientation = intent.screenOrientation

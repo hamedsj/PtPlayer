@@ -32,7 +32,7 @@ class PlayerOptionsWriter @Inject constructor(
                 settingsWriter.write(
                     StoreModel(
                         Keys.PLAYER_DEFAULT_LAYOUT_ORIENTATION_KEY,
-                        if (input.landscape) "1" else "0"
+                        input.orientation.toString()
                     )
                 )
             }

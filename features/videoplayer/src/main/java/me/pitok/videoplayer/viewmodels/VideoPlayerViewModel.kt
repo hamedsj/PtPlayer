@@ -5,7 +5,6 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.exoplayer2.source.MediaSource
@@ -33,10 +32,7 @@ import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
 import me.pitok.videoplayer.intents.PlayerControllerCommmand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
-import me.pitok.videoplayer.states.OptionsState
-import me.pitok.videoplayer.states.PLayerCommandState
-import me.pitok.videoplayer.states.SubtitleState
-import me.pitok.videoplayer.states.VideoPlayerState
+import me.pitok.videoplayer.states.*
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import java.io.File
 import javax.inject.Inject
@@ -52,6 +48,12 @@ class VideoPlayerViewModel @Inject constructor(
     private val subtitleOptionsReader: SubtitleOptionsReadType,
     ) : ViewModel(), MviModel<VideoPlayerState, VideoPlayerIntent> {
 
+    companion object{
+        const val PORTRAIT_ORIENTATION = 0
+        const val LANDSCAPE_ORIENTATION = 1
+        const val AUTO_ORIENTATION = 2
+    }
+
     var activePath : String? = null
     lateinit var datasourcetype: String
     private var videoList = mutableListOf<String>()
@@ -61,7 +63,7 @@ class VideoPlayerViewModel @Inject constructor(
     var subtitleTextSize = 18
     var subtitleTextColor: Int? = null
     var subtitleHighlightColor: Int? = null
-    var playerLandscapeOrientation = true
+    var playerOrientation = AUTO_ORIENTATION
 
     var resumePosition = 0L
     var resumeWindow = 0
@@ -81,6 +83,18 @@ class VideoPlayerViewModel @Inject constructor(
         viewModelScope.launch(NonCancellable) {
             intents.consumeAsFlow().collect { videoPlayerIntent ->
                 when (videoPlayerIntent){
+                    is VideoPlayerIntent.VideoSizeChanged -> {
+                        val ratio = videoPlayerIntent.width / videoPlayerIntent.height.toFloat()
+                        if (ratio > 1.33f && playerOrientation == AUTO_ORIENTATION){
+                            pState.update {
+                                OptionsState.ChangeOrientation(LANDSCAPE_ORIENTATION)
+                            }
+                        }else if (ratio <= 1.33f && playerOrientation == AUTO_ORIENTATION){
+                            pState.update {
+                                OptionsState.ChangeOrientation(PORTRAIT_ORIENTATION)
+                            }
+                        }
+                    }
                     is VideoPlayerIntent.SetPlayBackState -> {
                         pState.update {videoPlayerIntent.playbackState}
                     }
@@ -161,9 +175,9 @@ class VideoPlayerViewModel @Inject constructor(
                                     )
                                 }
                             }
-                            playerLandscapeOrientation = playerOptions.landscape
+                            playerOrientation = playerOptions.orientation
                             pState.update {
-                                OptionsState.ChangeOrientation(playerOptions.landscape)
+                                OptionsState.ChangeOrientation(playerOptions.orientation)
                             }
                             subtitleTextSize = requireNotNull(subtitleOptions.fontSize)
                             subtitleTextColor = subtitleOptions.fontColor
