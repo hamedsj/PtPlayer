@@ -124,6 +124,7 @@ class VideoPlayerActivity :
         videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
         videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
         videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
+        videoPlayerControllerNavigateBackIc.setOnClickListener(::onNavigateBackIcClick)
         videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
         lifecycleScope.launch {
@@ -261,6 +262,13 @@ class VideoPlayerActivity :
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Previous)
             )
+        }
+    }
+
+    private fun onNavigateBackIcClick(view: View) {
+        lifecycleScope.launch {
+            delay(CLICK_ANIMATION_DURATION)
+            super.onBackPressed()
         }
     }
 
