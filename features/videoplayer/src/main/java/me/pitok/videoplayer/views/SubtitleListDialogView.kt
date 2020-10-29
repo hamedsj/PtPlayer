@@ -1,7 +1,9 @@
 package me.pitok.videoplayer.views
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.os.Environment
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -9,7 +11,9 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.view_subtitle_list_dialog.*
 import me.pitok.logger.Logger
+import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.sdkextentions.toPx
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.entity.ListDialogItemEntity
@@ -42,7 +46,17 @@ class SubtitleListDialogView(
             }catch (ignored: Exception){Environment.getExternalStorageDirectory()}
         )
         setContentView(view)
-        window?.setLayout(500f.toPx(), ViewGroup.LayoutParams.WRAP_CONTENT)
+        (context as Activity).let{
+            if (it.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT ||
+                it.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT) {
+                window?.setLayout((it.getScreenWidth()*0.8).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
+                viewRoot.maxHeight = 500f.toPx()
+            }else{
+                window?.setLayout(500f.toPx(), ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+        } ?:let{
+            window?.setLayout(500f.toPx(), ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
         window?.setGravity(Gravity.CENTER)
     }
 
