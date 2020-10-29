@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
@@ -24,9 +23,8 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
+import com.google.android.exoplayer2.video.VideoListener
 import com.google.android.material.slider.Slider
 import kotlinx.android.synthetic.main.activity_video_player.*
 import kotlinx.android.synthetic.main.view_video_player_controller.*
@@ -53,7 +51,11 @@ import me.pitok.videoplayer.viewmodels.VideoPlayerViewModel
 import javax.inject.Inject
 
 
-class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Player.EventListener {
+class VideoPlayerActivity :
+    AppCompatActivity(),
+    MviView<VideoPlayerState>,
+    Player.EventListener,
+    VideoListener {
 
     companion object{
         const val DATA_SOURCE_KEY = "datasource"
@@ -130,6 +132,7 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             )
         }
         exoPlayer.addListener(this)
+        exoPlayer.addVideoListener(this)
         exoPlayer.onPositionChanged = { position ->
             onProgressChanged(position.toFloat())
         }
@@ -705,13 +708,15 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
                     }
             }
             is OptionsState.ChangeOrientation -> {
-                if (state.landscape &&
+                if (state.orientation == VideoPlayerViewModel.LANDSCAPE_ORIENTATION &&
                     requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
-                    videoPlayerViewModel.playerLandscapeOrientation = true
+                    videoPlayerViewModel.playerOrientation =
+                        VideoPlayerViewModel.LANDSCAPE_ORIENTATION
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                } else if(!state.landscape &&
+                } else if(state.orientation == VideoPlayerViewModel.PORTRAIT_ORIENTATION &&
                     requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                    videoPlayerViewModel.playerLandscapeOrientation = false
+                    videoPlayerViewModel.playerOrientation =
+                        VideoPlayerViewModel.PORTRAIT_ORIENTATION
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
             }
@@ -737,15 +742,18 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
     }
 
     private fun onScreenRotationOptionClick(){
+        Logger.d("onScreenRotationOptionClick called : $requestedOrientation")
         videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
         videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
         when (requestedOrientation){
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> {
-                videoPlayerViewModel.playerLandscapeOrientation = false
+                videoPlayerViewModel.playerOrientation =
+                    VideoPlayerViewModel.PORTRAIT_ORIENTATION
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
             else -> {
-                videoPlayerViewModel.playerLandscapeOrientation = true
+                videoPlayerViewModel.playerOrientation =
+                    VideoPlayerViewModel.LANDSCAPE_ORIENTATION
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
         }
@@ -834,6 +842,20 @@ class VideoPlayerActivity : AppCompatActivity(), MviView<VideoPlayerState>, Play
             }
         }.apply {
             show()
+        }
+    }
+
+    override fun onVideoSizeChanged(
+        width: Int,
+        height: Int,
+        unappliedRotationDegrees: Int,
+        pixelWidthHeightRatio: Float
+    ) {
+        Logger.d("onVideoSizeChanged/: width =$width & height =$height")
+        lifecycleScope.launch {
+            videoPlayerViewModel.intents.send(
+                VideoPlayerIntent.VideoSizeChanged(width,height)
+            )
         }
     }
 

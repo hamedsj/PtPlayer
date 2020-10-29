@@ -29,9 +29,9 @@ class PlayerOptionsReader @Inject constructor(
             },
 
             (settingsReader.read(Keys.PLAYER_DEFAULT_LAYOUT_ORIENTATION_KEY).run run@{
-                if (isNotEmpty()) this
-                else "1"
-            } != "0")
+                if (isNotEmpty()) this.toInt()
+                else 1
+            })
             )
     }
 }
