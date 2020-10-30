@@ -22,7 +22,10 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.PlaybackParameters
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.google.android.exoplayer2.video.VideoListener
 import com.google.android.material.slider.Slider
@@ -145,7 +148,7 @@ class VideoPlayerActivity :
 
             override fun onStopTrackingTouch(slider: Slider) {
                 sliderInTouch = false
-                if (!durationSet)return
+                if (!durationSet) return
                 exoPlayer.seekTo(slider.value.toLong())
             }
 
@@ -436,16 +439,32 @@ class VideoPlayerActivity :
         videoPlayerControllerOptionsIc.visibility = targetVisibility
         videoPlayerControllerSeekbar.isEnabled = visible
         videoPlayerControllerPlayIc.setOnClickListener(
-            if (visible) { ::onPlayIcClick }else{ {onControllerToggle()}}
+            if (visible) {
+                ::onPlayIcClick
+            } else {
+                { onControllerToggle() }
+            }
         )
         videoPlayerControllerNextIc.setOnClickListener(
-            if (visible) { ::onNextIcClick }else{ {onControllerToggle()}}
+            if (visible) {
+                ::onNextIcClick
+            } else {
+                { onControllerToggle() }
+            }
         )
         videoPlayerControllerBackIc.setOnClickListener(
-            if (visible) { ::onBackIcClick }else{ {onControllerToggle()}}
+            if (visible) {
+                ::onBackIcClick
+            } else {
+                { onControllerToggle() }
+            }
         )
         videoPlayerControllerOptionsIc.setOnClickListener(
-            if (visible) { ::onOptionsIcClick }else{ {onControllerToggle()}}
+            if (visible) {
+                ::onOptionsIcClick
+            } else {
+                { onControllerToggle() }
+            }
         )
     }
 
@@ -496,6 +515,11 @@ class VideoPlayerActivity :
             }
             is PlaybackState.Ended -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                lifecycleScope.launch {
+                    videoPlayerViewModel.intents.send(
+                        VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Next)
+                    )
+                }
             }
             is PlaybackState.NotReadyAndStoped -> {
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
@@ -523,8 +547,8 @@ class VideoPlayerActivity :
                         )
                     }
                     exoPlayer.prepare(this)
-                }?:apply {
-                    Toast.makeText(context,"Invalid Url Path!", Toast.LENGTH_LONG).show()
+                } ?: apply {
+                    Toast.makeText(context, "Invalid Url Path!", Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
@@ -539,8 +563,8 @@ class VideoPlayerActivity :
             }
             is PLayerCommandState.ChangeSpeakerVolume -> {
                 exoPlayer.volume =
-                    if (state.speakerVolume>1f) 1f
-                    else if (state.speakerVolume<0f) 0f
+                    if (state.speakerVolume > 1f) 1f
+                    else if (state.speakerVolume < 0f) 0f
                     else state.speakerVolume
             }
             is OptionsState.ShowMainMenu -> {
@@ -686,7 +710,7 @@ class VideoPlayerActivity :
                                     null,
                                 itemSecondaryIconResource = null,
                                 R.string.disable_audio,
-                                {exoPlayer.disableAudioRenderer()},
+                                { exoPlayer.disableAudioRenderer() },
                                 null
                             )
                         )
@@ -700,7 +724,7 @@ class VideoPlayerActivity :
                                             null,
                                         itemSecondaryIconResource = null,
                                         null,
-                                        {exoPlayer.selectTrackGroup(groupIndex)},
+                                        { exoPlayer.selectTrackGroup(groupIndex) },
                                         DefaultTrackNameProvider(resources).getTrackName(
                                             get(groupIndex).getFormat(formatIndex)
                                         )
@@ -717,12 +741,14 @@ class VideoPlayerActivity :
             }
             is OptionsState.ChangeOrientation -> {
                 if (state.orientation == VideoPlayerViewModel.LANDSCAPE_ORIENTATION &&
-                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
+                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                ) {
                     videoPlayerViewModel.playerOrientation =
                         VideoPlayerViewModel.LANDSCAPE_ORIENTATION
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                } else if(state.orientation == VideoPlayerViewModel.PORTRAIT_ORIENTATION &&
-                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                } else if (state.orientation == VideoPlayerViewModel.PORTRAIT_ORIENTATION &&
+                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                ) {
                     videoPlayerViewModel.playerOrientation =
                         VideoPlayerViewModel.PORTRAIT_ORIENTATION
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -771,7 +797,7 @@ class VideoPlayerActivity :
         videoPlayerViewModel.subtitleTextColor?.let {
             return it
         }?:let{
-            return ContextCompat.getColor(applicationContext,R.color.colorSubtitleWhite)
+            return ContextCompat.getColor(applicationContext, R.color.colorSubtitleWhite)
         }
     }
 
@@ -862,7 +888,7 @@ class VideoPlayerActivity :
         Logger.d("onVideoSizeChanged/: width =$width & height =$height")
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
-                VideoPlayerIntent.VideoSizeChanged(width,height)
+                VideoPlayerIntent.VideoSizeChanged(width, height)
             )
         }
     }
@@ -889,10 +915,10 @@ class VideoPlayerActivity :
             ExoPlayer.STATE_READY -> {
                 Logger.e("ExoPlayer.STATE_READY")
                 videoPlayerControllerSeekbar.valueFrom = 0f
-                if (exoPlayer.duration != C.TIME_UNSET){
+                if (exoPlayer.duration != C.TIME_UNSET) {
                     durationSet = true
                     videoPlayerControllerSeekbar.valueTo = exoPlayer.duration.toFloat()
-                }else{
+                } else {
                     durationSet = false
                     videoPlayerControllerSeekbar.valueTo = (Long.MAX_VALUE).toFloat()
                 }
@@ -955,7 +981,11 @@ class VideoPlayerActivity :
 
     private fun requestAudioFocus() : Boolean{
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val result = audioManager.requestAudioFocus({}, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        val result = audioManager.requestAudioFocus(
+            {},
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
         return (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
     }
 }
