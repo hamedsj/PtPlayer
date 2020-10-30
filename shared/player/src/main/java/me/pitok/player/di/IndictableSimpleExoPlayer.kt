@@ -22,7 +22,7 @@ class IndictableSimpleExoPlayer(context: Context, val trackSelector: DefaultTrac
     DefaultRenderersFactory(context),
     trackSelector,
     DefaultLoadControl.Builder().setBufferDurationsMs(
-        30*1000,
+        10*1000,
         60*1000,
         2000,
         3000).createDefaultLoadControl(),
