@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
+    implementation "androidx.core:core-ktx:$library.core"
+    implementation "com.google.firebase:firebase-analytics:$library.firebaseanalytics"
+    implementation "com.google.firebase:firebase-messaging:$library.fcm"
+    implementation "com.google.dagger:dagger:$library.dagger"
+    kapt "com.google.dagger:dagger-compiler:$library.dagger"
+    implementation "com.squareup.retrofit2:retrofit:$library.retrofit"
+    implementation "com.google.code.gson:gson:$library.gson"
+    implementation "com.squareup.retrofit2:converter-gson:$library.convertergson"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$library.coroutines"
+
+    implementation project(":libraries:dependencyinjection")
+    implementation project(":libraries:sharedpreferences")
+    implementation project(":libraries:androidcore")
+    implementation project(":libraries:navigation")
+    implementation project(":libraries:networking")
+    implementation project(":libraries:datasource")
+    implementation project(":libraries:coroutines")
+    implementation project(":libraries:mapper")
+
+}
