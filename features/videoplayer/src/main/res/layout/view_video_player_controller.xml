@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/videoPlayerController"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/videoPlayerController"
     android:background="@android:color/transparent"
-    tools:background="@android:color/black"
-    >
+    tools:background="@android:color/black">
 
     <View
         android:id="@+id/videoPlayerControllerHighlight"
@@ -32,51 +30,85 @@
         app:lottie_autoPlay="true"
         app:lottie_fileName="loading.json"
         app:lottie_loop="true"
-        tools:visibility="gone"
-        />
+        tools:visibility="gone" />
+
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/videoPlayerControllerPlayIc"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:clickable="true"
         android:focusable="true"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:padding="16dp"
         android:tint="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerHighlight"
+        app:layout_constraintEnd_toEndOf="@+id/videoPlayerControllerPlayClick"
+        app:layout_constraintStart_toStartOf="@+id/videoPlayerControllerPlayClick"
+        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerPlayClick"
         tools:src="@drawable/ic_play" />
+
+    <View
+        android:id="@+id/videoPlayerControllerPlayClick"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@drawable/selector_click_rectangle"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="8dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/videoPlayerControllerNextClick"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/videoPlayerControllerBackClick"/>
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/videoPlayerControllerNextIc"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        android:padding="16dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:src="@drawable/ic_next"
         android:tint="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerPlayIc"
+        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerNextClick"
+        app:layout_constraintEnd_toEndOf="@+id/videoPlayerControllerNextClick"
+        app:layout_constraintStart_toStartOf="@+id/videoPlayerControllerNextClick"
+        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerNextClick" />
+
+    <View
+        android:id="@+id/videoPlayerControllerNextClick"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/selector_click_rectangle"
+        android:paddingTop="8dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerPlayClick"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.33"
-        app:layout_constraintStart_toEndOf="@+id/videoPlayerControllerPlayIc"
-        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerPlayIc" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/videoPlayerControllerPlayClick"
+        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerPlayClick" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/videoPlayerControllerBackIc"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        android:padding="16dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:src="@drawable/ic_back"
         android:tint="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerPlayIc"
-        app:layout_constraintEnd_toStartOf="@+id/videoPlayerControllerPlayIc"
-        app:layout_constraintHorizontal_bias="0.66"
+        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerBackClick"
+        app:layout_constraintEnd_toEndOf="@+id/videoPlayerControllerBackClick"
+        app:layout_constraintStart_toStartOf="@+id/videoPlayerControllerBackClick"
+        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerBackClick" />
+
+    <View
+        android:id="@+id/videoPlayerControllerBackClick"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/selector_click_rectangle"
+        android:paddingTop="8dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="@+id/videoPlayerControllerPlayClick"
+        app:layout_constraintEnd_toStartOf="@+id/videoPlayerControllerPlayClick"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerPlayIc" />
+        app:layout_constraintTop_toTopOf="@+id/videoPlayerControllerPlayClick" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/videoPlayerControllerSeekbar"
@@ -84,10 +116,9 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
         android:layout_marginRight="24dp"
-        android:layout_marginBottom="8dp"
         android:theme="@style/SliderMaterialTheme"
         app:labelBehavior="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/videoPlayerControllerPlayClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:thumbColor="@color/color_primary_dark"
@@ -98,54 +129,54 @@
         android:id="@+id/videoPlayerControllerTimeLeft"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
         android:fontFamily="@font/robotoslab_light"
         android:maxLines="1"
         android:textColor="@color/colorAccent"
-        android:layout_marginLeft="8dp"
         android:textSize="15dp"
         app:layout_constraintBottom_toTopOf="@+id/videoPlayerControllerSeekbar"
         app:layout_constraintStart_toStartOf="@+id/videoPlayerControllerSeekbar"
-        tools:text="01:23:12"
-        tools:ignore="RtlHardcoded,SpUsage" />
+        tools:ignore="RtlHardcoded,SpUsage"
+        tools:text="01:23:12" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/videoPlayerControllerDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
         android:fontFamily="@font/robotoslab_light"
         android:maxLines="1"
         android:textColor="@color/colorAccent"
         android:textSize="15dp"
-        android:layout_marginRight="8dp"
         app:layout_constraintBottom_toTopOf="@+id/videoPlayerControllerSeekbar"
         app:layout_constraintEnd_toEndOf="@+id/videoPlayerControllerSeekbar"
-        tools:text="02:52:56"
-        tools:ignore="RtlHardcoded,SpUsage" />
+        tools:ignore="RtlHardcoded,SpUsage"
+        tools:text="02:52:56" />
 
     <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/videoPlayerControllerOptionsIc"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:id="@+id/videoPlayerControllerOptionsIc"
-        android:padding="8dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_dot_menu"
-        android:tint="@color/colorAccent"
         android:layout_marginTop="24dp"
         android:layout_marginRight="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_dot_menu"
+        android:tint="@color/colorAccent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="RtlHardcoded" />
 
     <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/videoPlayerControllerNavigateBackIc"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:id="@+id/videoPlayerControllerNavigateBackIc"
-        android:padding="8dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
         android:src="@drawable/ic_arrow_back"
         android:tint="@color/colorAccent"
-        android:layout_marginTop="24dp"
-        android:layout_marginLeft="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="RtlHardcoded" />

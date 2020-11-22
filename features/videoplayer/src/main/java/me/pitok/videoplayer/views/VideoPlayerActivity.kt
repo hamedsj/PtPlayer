@@ -123,9 +123,9 @@ class VideoPlayerActivity :
                 return true
             }
         })
-        videoPlayerControllerPlayIc.setOnClickListener(::onPlayIcClick)
-        videoPlayerControllerNextIc.setOnClickListener(::onNextIcClick)
-        videoPlayerControllerBackIc.setOnClickListener(::onBackIcClick)
+        videoPlayerControllerPlayClick.setOnClickListener(::onPlayIcClick)
+        videoPlayerControllerNextClick.setOnClickListener(::onNextIcClick)
+        videoPlayerControllerBackClick.setOnClickListener(::onBackIcClick)
         videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
         videoPlayerControllerNavigateBackIc.setOnClickListener(::onNavigateBackIcClick)
         videoPlayerPv.player = exoPlayer
@@ -336,6 +336,8 @@ class VideoPlayerActivity :
                 }
             }
             else -> {
+                videoPlayerControllerBackClick.visibility = View.GONE
+                videoPlayerControllerNextClick.visibility = View.GONE
                 videoPlayerControllerBackIc.visibility = View.GONE
                 videoPlayerControllerNextIc.visibility = View.GONE
             }
@@ -432,27 +434,30 @@ class VideoPlayerActivity :
 
     private fun setPlaybackButtonsVisibility(visible: Boolean){
         val targetVisibility = if (visible) View.VISIBLE else View.GONE
+        videoPlayerControllerPlayClick.visibility = targetVisibility
+        videoPlayerControllerNextClick.visibility = targetVisibility
+        videoPlayerControllerBackClick.visibility = targetVisibility
         videoPlayerControllerPlayIc.visibility = targetVisibility
         videoPlayerControllerNextIc.visibility = targetVisibility
         videoPlayerControllerBackIc.visibility = targetVisibility
         videoPlayerControllerSeekbar.visibility = targetVisibility
         videoPlayerControllerOptionsIc.visibility = targetVisibility
         videoPlayerControllerSeekbar.isEnabled = visible
-        videoPlayerControllerPlayIc.setOnClickListener(
+        videoPlayerControllerPlayClick.setOnClickListener(
             if (visible) {
                 ::onPlayIcClick
             } else {
                 { onControllerToggle() }
             }
         )
-        videoPlayerControllerNextIc.setOnClickListener(
+        videoPlayerControllerNextClick.setOnClickListener(
             if (visible) {
                 ::onNextIcClick
             } else {
                 { onControllerToggle() }
             }
         )
-        videoPlayerControllerBackIc.setOnClickListener(
+        videoPlayerControllerBackClick.setOnClickListener(
             if (visible) {
                 ::onBackIcClick
             } else {
@@ -495,9 +500,12 @@ class VideoPlayerActivity :
         if (state !is SubtitleState)
             Logger.e("render($state)")
         if (state !is PlaybackState.Buffering){
-            videoPlayerControllerPlayIc.visibility = View.VISIBLE
-            videoPlayerControllerBackIc.visibility = View.VISIBLE
-            videoPlayerControllerNextIc.visibility = View.VISIBLE
+            videoPlayerControllerPlayClick.visibility = View.VISIBLE
+            videoPlayerControllerBackClick.visibility = View.VISIBLE
+            videoPlayerControllerNextClick.visibility = View.VISIBLE
+            videoPlayerControllerPlayClick.isEnabled = true
+            videoPlayerControllerBackClick.isEnabled = true
+            videoPlayerControllerNextClick.isEnabled = true
             videoPlayerLoadingAv.visibility = View.INVISIBLE
         }
         when(state){
@@ -525,9 +533,9 @@ class VideoPlayerActivity :
                 videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
             }
             is PlaybackState.Buffering -> {
-                videoPlayerControllerPlayIc.visibility = View.INVISIBLE
-                videoPlayerControllerBackIc.visibility = View.INVISIBLE
-                videoPlayerControllerNextIc.visibility = View.INVISIBLE
+                videoPlayerControllerPlayClick.isEnabled = false
+                videoPlayerControllerBackClick.isEnabled = false
+                videoPlayerControllerNextClick.isEnabled = false
                 videoPlayerLoadingAv.visibility = View.VISIBLE
             }
             is PLayerCommandState.Start -> {
