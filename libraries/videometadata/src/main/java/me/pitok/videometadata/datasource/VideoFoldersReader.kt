@@ -23,7 +23,13 @@ class VideoFoldersReader @Inject constructor(): VideoFoldersReadType{
         ) ?: return Failure(Throwable())
         if (!cursor.moveToFirst()) Failure(Throwable())
         do {
-            val videoFilePath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA))
+            var videoFilePath = ""
+            try {
+                videoFilePath =
+                    cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA))
+            }catch (ignored: Exception){
+                continue
+            }
             val videoFilePathSplited = videoFilePath.split("/") as MutableList
             videoFilePathSplited.removeAt(videoFilePathSplited.size-1)
             val videoFolderPath = videoFilePathSplited.joinToString("/")

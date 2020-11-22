@@ -13,6 +13,10 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$library.navigation"
     implementation "androidx.fragment:fragment-ktx:$library.fragment"
     implementation "com.makeramen:roundedimageview:$library.roundedimageview"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$library.lifecycle"
+
 
 
     implementation "com.airbnb.android:epoxy:$library.epoxy"
