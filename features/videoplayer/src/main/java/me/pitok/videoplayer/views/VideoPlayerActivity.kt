@@ -99,7 +99,7 @@ class VideoPlayerActivity :
         setInitialViews(savedInstanceState)
         val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
-        videoPlayerControllerHighlight.setOnTouchListener(object : View.OnTouchListener {
+        videoPlayerController.setOnTouchListener(object : View.OnTouchListener {
             private val gestureDetector = GestureDetector(context, object :
                 GestureDetector.SimpleOnGestureListener() {
                 override fun onDoubleTap(e: MotionEvent?): Boolean {
@@ -357,6 +357,7 @@ class VideoPlayerActivity :
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
+        setFullScreen(true)
         videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
         val lp = videoPlayerControllerSeekbar.layoutParams as ConstraintLayout.LayoutParams
         videoPlayerControllerSeekbar.layoutParams = when (requestedOrientation){
@@ -383,7 +384,6 @@ class VideoPlayerActivity :
             fadeOutObjectAnimator.duration = FADE_IN_ANIM_DURATION
             fadeOutObjectAnimator.doOnEnd {
                 setPlaybackButtonsVisibility(visible = false)
-                setFullScreen(false)
                 setSubtitleBottomMargin(12f)
             }
             fadeOutObjectAnimator.start()
@@ -397,7 +397,7 @@ class VideoPlayerActivity :
             fadeInObjectAnimator.interpolator = LinearInterpolator()
             fadeInObjectAnimator.duration = FADE_OUT_ANIM_DURATION
             fadeInObjectAnimator.doOnEnd {
-                setFullScreen(true)
+//                setFullScreen(false)
                 setSubtitleBottomMargin(24f)
             }
             fadeInObjectAnimator.start()
@@ -413,9 +413,6 @@ class VideoPlayerActivity :
 
     private fun setFullScreen(enabled: Boolean = true){
         if (enabled){
-            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            window.decorView.systemUiVisibility = View.VISIBLE
-        }else{
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             val fullscreenFlags =  (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -424,11 +421,14 @@ class VideoPlayerActivity :
                     or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
             window.decorView.systemUiVisibility =
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                        (fullscreenFlags or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-                    }else {
-                        fullscreenFlags
-                    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    (fullscreenFlags or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                }else {
+                    fullscreenFlags
+                }
+        }else{
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window.decorView.systemUiVisibility = View.VISIBLE
         }
     }
 
