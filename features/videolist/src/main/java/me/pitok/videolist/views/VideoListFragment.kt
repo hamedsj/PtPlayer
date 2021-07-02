@@ -302,8 +302,12 @@ class VideoListFragment:
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             true
         else
-            applicationContext.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_GRANTED
+            (applicationContext
+                .checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                    PackageManager.PERMISSION_GRANTED) and
+                    (applicationContext
+                        .checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_GRANTED)
     }
 
     private fun getStoragePermissions() {
@@ -311,7 +315,8 @@ class VideoListFragment:
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestPermissions(
             arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
             ),
             REQUEST_STORAGE_PERMISSION_CODE
         )

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="me.pitok.ptplayer">
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -15,6 +17,7 @@
         android:supportsRtl="false"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true"
         tools:ignore="UnusedAttribute">
         <activity android:name=".views.MainActivity">
             <intent-filter>
