@@ -9,7 +9,9 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -20,8 +22,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.ImageLoader
-import kotlinx.android.synthetic.main.fragment_video_list.*
-import kotlinx.android.synthetic.main.merge_video_list_drawer.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,6 +36,8 @@ import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.sdkextentions.toPx
 import me.pitok.videolist.R
+import me.pitok.videolist.databinding.FragmentVideoListBinding
+import me.pitok.videolist.databinding.MergeVideoListDrawerBinding
 import me.pitok.videolist.di.builder.VideoListComponentBuilder
 import me.pitok.videolist.entities.FileEntity
 import me.pitok.videolist.intents.VideoListIntent
@@ -46,7 +48,7 @@ import javax.inject.Inject
 
 @SuppressLint("RtlHardcoded")
 class VideoListFragment:
-    Fragment(R.layout.fragment_video_list),
+    Fragment(),
     MviView<VideoListState>,
     DrawerLayout.DrawerListener {
 
@@ -68,6 +70,9 @@ class VideoListFragment:
     @Inject
     lateinit var coilImageLoader: ImageLoader
 
+    private lateinit var binding: FragmentVideoListBinding
+    private lateinit var videoListDrawerBinding: MergeVideoListDrawerBinding
+
     private val videoListViewModel: VideoListViewModel by viewModels { viewModelFactory }
 
     override fun onAttach(context: Context) {
@@ -75,21 +80,31 @@ class VideoListFragment:
         VideoListComponentBuilder.getComponent().inject(this)
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentVideoListBinding.inflate(layoutInflater, container, false)
+        videoListDrawerBinding = MergeVideoListDrawerBinding.bind(binding.root)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         videoListViewModel.navigationObservable.observeNavigation(this)
-        videoListDrawerLayout.setScrimColor(Color.TRANSPARENT);
-        videoListDrawerLayout.addDrawerListener(this)
-        videoListDrawerIc.setOnClickListener(::onDrawerIcClickListener)
-        videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
-        videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
-        videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
-        videoListDrawerAboutClickable.setOnClickListener(::onAboutClick)
-        videoListPermitBt.setOnClickListener{getStoragePermissions()}
-        videoListBackIc.setOnClickListener{
-            lifecycleScope.launch{
+        binding.videoListDrawerLayout.setScrimColor(Color.TRANSPARENT);
+        binding.videoListDrawerLayout.addDrawerListener(this)
+        binding.videoListDrawerIc.setOnClickListener(::onDrawerIcClickListener)
+        videoListDrawerBinding.videoListDrawerNetwrokStreamClickable.setOnClickListener(::onNetworkStreamClick)
+        videoListDrawerBinding.videoListDrawerSettingsClickable.setOnClickListener(::onSettingsClick)
+        videoListDrawerBinding.videoListDrawerFeedbackClickable.setOnClickListener(::onFeedbackClick)
+        videoListDrawerBinding.videoListDrawerAboutClickable.setOnClickListener(::onAboutClick)
+        binding.videoListPermitBt.setOnClickListener { getStoragePermissions() }
+        binding.videoListBackIc.setOnClickListener {
+            lifecycleScope.launch {
                 delay(ANIMATION_DURATION)
-                withContext(Dispatchers.Main){onBackPressed()}
+                withContext(Dispatchers.Main) { onBackPressed() }
             }
         }
         videoListEpoxyController = VideoListController(
@@ -98,19 +113,19 @@ class VideoListFragment:
             coilImageLoader,
             requireActivity().getScreenWidth()
         )
-        videoListRv.apply {
+        binding.videoListRv.apply {
             layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = videoListEpoxyController.adapter
         }
         videoListViewModel.state.observe(this@VideoListFragment.viewLifecycleOwner, ::render)
         if (!isStoragePermissionGranted()) {
-            videoListPermissionText.visibility = View.VISIBLE
-            videoListPermitBt.visibility = View.VISIBLE
-            videoListRv.visibility = View.INVISIBLE
+            binding.videoListPermissionText.visibility = View.VISIBLE
+            binding.videoListPermitBt.visibility = View.VISIBLE
+            binding.videoListRv.visibility = View.INVISIBLE
         } else {
-            videoListPermissionText.visibility = View.INVISIBLE
-            videoListPermitBt.visibility = View.INVISIBLE
-            videoListRv.visibility = View.VISIBLE
+            binding.videoListPermissionText.visibility = View.INVISIBLE
+            binding.videoListPermitBt.visibility = View.INVISIBLE
+            binding.videoListRv.visibility = View.VISIBLE
             lifecycleScope.launch {
                 videoListViewModel.intents.send(
                     VideoListIntent.FetchFolders(
@@ -129,7 +144,7 @@ class VideoListFragment:
         lifecycleScope.launch {
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main) {
-                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+                binding.videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
             }
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main){
@@ -183,7 +198,7 @@ class VideoListFragment:
         lifecycleScope.launch {
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main) {
-                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+                binding.videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
             }
             delay(ANIMATION_DURATION)
             videoListViewModel.intents.send(
@@ -196,7 +211,7 @@ class VideoListFragment:
         lifecycleScope.launch {
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main) {
-                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+                binding.videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
             }
             delay(ANIMATION_DURATION)
             videoListViewModel.intents.send(
@@ -209,7 +224,7 @@ class VideoListFragment:
         lifecycleScope.launch {
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main) {
-                videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
+                binding.videoListDrawerLayout.closeDrawer(Gravity.RIGHT)
             }
             delay(ANIMATION_DURATION)
                 Intent(Intent.ACTION_SEND).apply {
@@ -226,7 +241,7 @@ class VideoListFragment:
         lifecycleScope.launch{
             delay(ANIMATION_DURATION)
             withContext(Dispatchers.Main){
-                videoListDrawerLayout.openDrawer(Gravity.RIGHT)
+                binding.videoListDrawerLayout.openDrawer(Gravity.RIGHT)
             }
         }
     }
@@ -283,19 +298,20 @@ class VideoListFragment:
     override fun render(state: VideoListState) {
         videoListEpoxyController.items = state.items
         videoListEpoxyController.requestModelBuild()
-        if (state.sub_folder){
-            videoListBackIc.visibility = View.VISIBLE
-            val lp = videoListTitle.layoutParams as ConstraintLayout.LayoutParams
+        if (state.sub_folder) {
+            binding.videoListBackIc.visibility = View.VISIBLE
+            val lp = binding.videoListTitle.layoutParams as ConstraintLayout.LayoutParams
             lp.leftMargin = 8f.toPx()
-            videoListTitle.layoutParams = lp
-        }else{
-            videoListBackIc.visibility = View.GONE
-            val lp = videoListTitle.layoutParams as ConstraintLayout.LayoutParams
+            binding.videoListTitle.layoutParams = lp
+        } else {
+            binding.videoListBackIc.visibility = View.GONE
+            val lp = binding.videoListTitle.layoutParams as ConstraintLayout.LayoutParams
             lp.leftMargin = 24f.toPx()
-            videoListTitle.layoutParams = lp
+            binding.videoListTitle.layoutParams = lp
         }
-        (videoListRv.layoutManager as GridLayoutManager).spanCount = if (state.sub_folder) 2 else 3
-        videoListTitle.text = state.title
+        (binding.videoListRv.layoutManager as GridLayoutManager).spanCount =
+            if (state.sub_folder) 2 else 3
+        binding.videoListTitle.text = state.title
     }
 
     private fun isStoragePermissionGranted(): Boolean {
@@ -323,7 +339,7 @@ class VideoListFragment:
     }
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-        videoListContent?.apply {
+        binding.videoListContent?.apply {
             translationX = -1 * drawerView.width * slideOffset
         }
     }
@@ -335,10 +351,10 @@ class VideoListFragment:
     ) {
         if (requestCode == REQUEST_STORAGE_PERMISSION_CODE &&
             grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED ){
-            videoListPermissionText.visibility = View.INVISIBLE
-            videoListPermitBt.visibility = View.INVISIBLE
-            videoListRv.visibility = View.VISIBLE
+            grantResults[0] == PackageManager.PERMISSION_GRANTED ) {
+            binding.videoListPermissionText.visibility = View.INVISIBLE
+            binding.videoListPermitBt.visibility = View.INVISIBLE
+            binding.videoListRv.visibility = View.VISIBLE
             lifecycleScope.launch {
                 videoListViewModel.intents.send(
                     VideoListIntent.FetchFolders(
