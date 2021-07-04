@@ -29,8 +29,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.google.android.exoplayer2.video.VideoListener
 import com.google.android.material.slider.Slider
-import kotlinx.android.synthetic.main.activity_video_player.*
-import kotlinx.android.synthetic.main.view_video_player_controller.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -46,6 +44,7 @@ import me.pitok.sdkextentions.getScreenWidth
 import me.pitok.sdkextentions.toPx
 import me.pitok.subtitle.components.SubtitleBackgroundColorSpan
 import me.pitok.videoplayer.R
+import me.pitok.videoplayer.databinding.ActivityVideoPlayerBinding
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
 import me.pitok.videoplayer.intents.PlayerControllerCommand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
@@ -63,7 +62,7 @@ class VideoPlayerActivity :
     Player.EventListener,
     VideoListener {
 
-    companion object{
+    companion object {
         const val DATA_SOURCE_KEY = "datasource"
         const val DATA_SOURCE_TYPE_KEY = "datasourcetype"
         const val LOCAL_PATH_DATA_TYPE = "localpath"
@@ -88,14 +87,18 @@ class VideoPlayerActivity :
     @Inject
     lateinit var context: Context
 
+    private lateinit var binding: ActivityVideoPlayerBinding
+
     private var sliderInTouch = false
     private var durationSet = false
 
     private val videoPlayerViewModel: VideoPlayerViewModel by viewModels { viewModelFactory }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_video_player)
+        binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         Logger.w("OnCreate")
         VideoPlayerComponentBuilder.getComponent().inject(this)
         getInitialData(savedInstanceState)
@@ -106,7 +109,8 @@ class VideoPlayerActivity :
             this@VideoPlayerActivity,
             ::observeSubtitleEvents
         )
-        videoPlayerController.setOnTouchListener(object : View.OnTouchListener {
+        binding.playerController.videoPlayerController.setOnTouchListener(object :
+            View.OnTouchListener {
             private val gestureDetector = GestureDetector(context, object :
                 GestureDetector.SimpleOnGestureListener() {
                 override fun onDoubleTap(e: MotionEvent?): Boolean {
@@ -130,12 +134,12 @@ class VideoPlayerActivity :
                 return true
             }
         })
-        videoPlayerControllerPlayClick.setOnClickListener(::onPlayIcClick)
-        videoPlayerControllerNextClick.setOnClickListener(::onNextIcClick)
-        videoPlayerControllerBackClick.setOnClickListener(::onBackIcClick)
-        videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
-        videoPlayerControllerNavigateBackIc.setOnClickListener(::onNavigateBackIcClick)
-        videoPlayerPv.player = exoPlayer
+        binding.playerController.videoPlayerControllerPlayClick.setOnClickListener(::onPlayIcClick)
+        binding.playerController.videoPlayerControllerNextClick.setOnClickListener(::onNextIcClick)
+        binding.playerController.videoPlayerControllerBackClick.setOnClickListener(::onBackIcClick)
+        binding.playerController.videoPlayerControllerOptionsIc.setOnClickListener(::onOptionsIcClick)
+        binding.playerController.videoPlayerControllerNavigateBackIc.setOnClickListener(::onNavigateBackIcClick)
+        binding.videoPlayerPv.player = exoPlayer
         exoPlayer.seekTo(0L)
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
@@ -147,7 +151,7 @@ class VideoPlayerActivity :
         exoPlayer.onPositionChanged = { position ->
             onProgressChanged(position.toFloat())
         }
-        videoPlayerControllerSeekbar.addOnSliderTouchListener(object :
+        binding.playerController.videoPlayerControllerSeekbar.addOnSliderTouchListener(object :
             Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
                 sliderInTouch = true
@@ -160,23 +164,24 @@ class VideoPlayerActivity :
             }
 
         })
-        videoPlayerControllerSeekbar.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
+        binding.playerController.videoPlayerControllerSeekbar.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
             if (!fromUser || !durationSet) return@OnChangeListener
-            videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(value.toLong())
+            binding.playerController.videoPlayerControllerTimeLeft.text =
+                miliSecToFormatedTime(value.toLong())
         })
     }
 
-    private fun onFastForwardTapped(){
+    private fun onFastForwardTapped() {
         if (exoPlayer.duration == C.TIME_UNSET) return
-        if (exoPlayer.contentPosition >= (exoPlayer.duration-10000))
+        if (exoPlayer.contentPosition >= (exoPlayer.duration - 10000))
             exoPlayer.seekTo(exoPlayer.duration - 500)
         else
             exoPlayer.seekTo(exoPlayer.currentPosition + 10000)
 
         val fadeInObjectAnimator = ObjectAnimator.ofFloat(
-            videoPlayerFastForwardHighlight,
+            binding.videoPlayerFastForwardHighlight,
             "alpha",
-            videoPlayerFastForwardHighlight.alpha,
+            binding.videoPlayerFastForwardHighlight.alpha,
             1f
         )
         fadeInObjectAnimator.interpolator = AccelerateInterpolator()
@@ -184,11 +189,11 @@ class VideoPlayerActivity :
         fadeInObjectAnimator.doOnEnd {
             lifecycleScope.launch {
                 delay(CHANGE_POSITION_ANIMATION_DURATION)
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
-                        videoPlayerFastForwardHighlight,
+                        binding.videoPlayerFastForwardHighlight,
                         "alpha",
-                        videoPlayerFastForwardHighlight.alpha,
+                        binding.videoPlayerFastForwardHighlight.alpha,
                         0f
                     )
                     fadeOutObjectAnimator.interpolator = AccelerateInterpolator()
@@ -200,7 +205,7 @@ class VideoPlayerActivity :
         fadeInObjectAnimator.start()
     }
 
-    private fun onRewindTapped(){
+    private fun onRewindTapped() {
         if (exoPlayer.duration == C.TIME_UNSET) return
         if (exoPlayer.contentPosition <= (10000))
             exoPlayer.seekTo(0L)
@@ -208,9 +213,9 @@ class VideoPlayerActivity :
             exoPlayer.seekTo(exoPlayer.currentPosition - 10000)
 
         val fadeInObjectAnimator = ObjectAnimator.ofFloat(
-            videoPlayerRewindHighlight,
+            binding.videoPlayerRewindHighlight,
             "alpha",
-            videoPlayerRewindHighlight.alpha,
+            binding.videoPlayerRewindHighlight.alpha,
             1f
         )
         fadeInObjectAnimator.interpolator = AccelerateInterpolator()
@@ -218,11 +223,11 @@ class VideoPlayerActivity :
         fadeInObjectAnimator.doOnEnd {
             lifecycleScope.launch {
                 delay(CHANGE_POSITION_ANIMATION_DURATION)
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
-                        videoPlayerRewindHighlight,
+                        binding.videoPlayerRewindHighlight,
                         "alpha",
-                        videoPlayerRewindHighlight.alpha,
+                        binding.videoPlayerRewindHighlight.alpha,
                         0f
                     )
                     fadeOutObjectAnimator.interpolator = AccelerateInterpolator()
@@ -234,16 +239,17 @@ class VideoPlayerActivity :
         fadeInObjectAnimator.start()
     }
 
-    private fun onProgressChanged(position: Float){
+    private fun onProgressChanged(position: Float) {
         if (sliderInTouch) return
-        videoPlayerControllerTimeLeft.text = miliSecToFormatedTime(exoPlayer.currentPosition)
+        binding.playerController.videoPlayerControllerTimeLeft.text =
+            miliSecToFormatedTime(exoPlayer.currentPosition)
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SubtitleProgressChanged(progress = exoPlayer.currentPosition)
             )
         }
         if (!durationSet) return
-        videoPlayerControllerSeekbar.apply {
+        binding.playerController.videoPlayerControllerSeekbar.apply {
             value = if (position >= valueTo) valueTo else position
         }
     }
@@ -297,10 +303,10 @@ class VideoPlayerActivity :
             videoPlayerViewModel.resumePosition = 0L
             videoPlayerViewModel.resumeWindow = 0
         }
-        if (intent.action != null){
+        if (intent.action != null) {
             try {
                 videoPlayerViewModel.datasourcetype = LOCAL_PATH_DATA_TYPE
-                if (intent.data?.scheme == "content"){
+                if (intent.data?.scheme == "content") {
                     videoPlayerViewModel.activePath = videoPlayerViewModel.getRealPathFromURI(
                         contentResolver,
                         intent.data
@@ -308,7 +314,7 @@ class VideoPlayerActivity :
                 }
                 Logger.v("${videoPlayerViewModel.activePath}")
                 videoPlayerViewModel.getFolderVideos(contentResolver)
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 Toast.makeText(context, "PtPlayer cannot play this file", Toast.LENGTH_LONG).show()
                 Logger.e(e.message)
                 finish()
@@ -318,11 +324,11 @@ class VideoPlayerActivity :
         try {
             videoPlayerViewModel.datasourcetype =
                 requireNotNull(intent.getStringExtra(DATA_SOURCE_TYPE_KEY))
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Logger.e(e.message)
             finish()
         }
-        when(videoPlayerViewModel.datasourcetype){
+        when (videoPlayerViewModel.datasourcetype) {
             LOCAL_PATH_DATA_TYPE -> {
                 intent.getStringExtra(DATA_SOURCE_KEY)?.run {
                     videoPlayerViewModel.activePath = this
@@ -343,10 +349,10 @@ class VideoPlayerActivity :
                 }
             }
             else -> {
-                videoPlayerControllerBackClick.visibility = View.GONE
-                videoPlayerControllerNextClick.visibility = View.GONE
-                videoPlayerControllerBackIc.visibility = View.GONE
-                videoPlayerControllerNextIc.visibility = View.GONE
+                binding.playerController.videoPlayerControllerBackClick.visibility = View.GONE
+                binding.playerController.videoPlayerControllerNextClick.visibility = View.GONE
+                binding.playerController.videoPlayerControllerBackIc.visibility = View.GONE
+                binding.playerController.videoPlayerControllerNextIc.visibility = View.GONE
             }
         }
     }
@@ -365,26 +371,28 @@ class VideoPlayerActivity :
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
         setFullScreen(true)
-        videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
-        val lp = videoPlayerControllerSeekbar.layoutParams as ConstraintLayout.LayoutParams
-        videoPlayerControllerSeekbar.layoutParams = when (requestedOrientation){
-            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
-                lp.bottomMargin = 8f.toPx()
-                lp
+        binding.playerController.videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+        val lp = binding.playerController.videoPlayerControllerSeekbar.layoutParams
+                as ConstraintLayout.LayoutParams
+        binding.playerController.videoPlayerControllerSeekbar.layoutParams =
+            when (requestedOrientation) {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                    lp.bottomMargin = 8f.toPx()
+                    lp
+                }
+                else -> {
+                    lp.bottomMargin = 32f.toPx()
+                    lp
+                }
             }
-            else -> {
-                lp.bottomMargin = 32f.toPx()
-                lp
-            }
-        }
     }
 
-    private fun onControllerToggle(){
-        if (videoPlayerController.alpha != 0f){
+    private fun onControllerToggle() {
+        if (binding.playerController.videoPlayerController.alpha != 0f) {
             val fadeOutObjectAnimator = ObjectAnimator.ofFloat(
-                videoPlayerController,
+                binding.playerController.videoPlayerController,
                 "alpha",
-                videoPlayerController.alpha,
+                binding.playerController.videoPlayerController.alpha,
                 0f
             )
             fadeOutObjectAnimator.interpolator = LinearInterpolator()
@@ -394,11 +402,11 @@ class VideoPlayerActivity :
                 setSubtitleBottomMargin(12f)
             }
             fadeOutObjectAnimator.start()
-        }else{
+        } else {
             val fadeInObjectAnimator = ObjectAnimator.ofFloat(
-                videoPlayerController,
+                binding.playerController.videoPlayerController,
                 "alpha",
-                videoPlayerController.alpha,
+                binding.playerController.videoPlayerController.alpha,
                 1f
             )
             fadeInObjectAnimator.interpolator = LinearInterpolator()
@@ -412,16 +420,16 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun setSubtitleBottomMargin(bottomMargin: Float){
-        val lp = subtitleTv.layoutParams as ConstraintLayout.LayoutParams
+    private fun setSubtitleBottomMargin(bottomMargin: Float) {
+        val lp = binding.subtitleTv.layoutParams as ConstraintLayout.LayoutParams
         lp.bottomMargin = bottomMargin.toPx()
-        subtitleTv.layoutParams = lp
+        binding.subtitleTv.layoutParams = lp
     }
 
-    private fun setFullScreen(enabled: Boolean = true){
-        if (enabled){
+    private fun setFullScreen(enabled: Boolean = true) {
+        if (enabled) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            val fullscreenFlags =  (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            val fullscreenFlags = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
@@ -430,48 +438,48 @@ class VideoPlayerActivity :
             window.decorView.systemUiVisibility =
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                     (fullscreenFlags or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-                }else {
+                } else {
                     fullscreenFlags
                 }
-        }else{
+        } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             window.decorView.systemUiVisibility = View.VISIBLE
         }
     }
 
-    private fun setPlaybackButtonsVisibility(visible: Boolean){
+    private fun setPlaybackButtonsVisibility(visible: Boolean) {
         val targetVisibility = if (visible) View.VISIBLE else View.GONE
-        videoPlayerControllerPlayClick.visibility = targetVisibility
-        videoPlayerControllerNextClick.visibility = targetVisibility
-        videoPlayerControllerBackClick.visibility = targetVisibility
-        videoPlayerControllerPlayIc.visibility = targetVisibility
-        videoPlayerControllerNextIc.visibility = targetVisibility
-        videoPlayerControllerBackIc.visibility = targetVisibility
-        videoPlayerControllerSeekbar.visibility = targetVisibility
-        videoPlayerControllerOptionsIc.visibility = targetVisibility
-        videoPlayerControllerSeekbar.isEnabled = visible
-        videoPlayerControllerPlayClick.setOnClickListener(
+        binding.playerController.videoPlayerControllerPlayClick.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerNextClick.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerBackClick.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerPlayIc.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerNextIc.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerBackIc.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerSeekbar.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerOptionsIc.visibility = targetVisibility
+        binding.playerController.videoPlayerControllerSeekbar.isEnabled = visible
+        binding.playerController.videoPlayerControllerPlayClick.setOnClickListener(
             if (visible) {
                 ::onPlayIcClick
             } else {
                 { onControllerToggle() }
             }
         )
-        videoPlayerControllerNextClick.setOnClickListener(
+        binding.playerController.videoPlayerControllerNextClick.setOnClickListener(
             if (visible) {
                 ::onNextIcClick
             } else {
                 { onControllerToggle() }
             }
         )
-        videoPlayerControllerBackClick.setOnClickListener(
+        binding.playerController.videoPlayerControllerBackClick.setOnClickListener(
             if (visible) {
                 ::onBackIcClick
             } else {
                 { onControllerToggle() }
             }
         )
-        videoPlayerControllerOptionsIc.setOnClickListener(
+        binding.playerController.videoPlayerControllerOptionsIc.setOnClickListener(
             if (visible) {
                 ::onOptionsIcClick
             } else {
@@ -506,15 +514,15 @@ class VideoPlayerActivity :
     private fun observeSubtitleEvents(event: SubtitleState) {
         when (event) {
             is SubtitleState.Clear -> {
-                subtitleTv.text = ""
+                binding.subtitleTv.text = ""
             }
             is SubtitleState.Show -> {
-                subtitleTv.setTextColor(getSubtitleTextColor())
-                subtitleTv.setTextSize(
+                binding.subtitleTv.setTextColor(getSubtitleTextColor())
+                binding.subtitleTv.setTextSize(
                     TypedValue.COMPLEX_UNIT_SP,
                     videoPlayerViewModel.subtitleTextSize.toFloat()
                 )
-                subtitleTv.text = getSubtitleSpannableFromString(event.subText)
+                binding.subtitleTv.text = getSubtitleSpannableFromString(event.subText)
             }
             is SubtitleState.SubtitleReadingError -> {
                 Toast.makeText(context, "Error in reading subtitle file!", Toast.LENGTH_LONG).show()
@@ -530,21 +538,26 @@ class VideoPlayerActivity :
             when (status) {
                 is PlaybackStatus.Playing -> {
                     endBuffering()
-                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
-                    videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                    videoPlayerControllerTimeLeft.text =
+                    binding.playerController.videoPlayerControllerPlayIc
+                        .setImageResource(R.drawable.ic_pause)
+                    binding.playerController.videoPlayerControllerDuration.text =
+                        miliSecToFormatedTime(exoPlayer.duration)
+                    binding.playerController.videoPlayerControllerTimeLeft.text =
                         miliSecToFormatedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.ReadyAndStopped -> {
                     endBuffering()
-                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
-                    videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                    videoPlayerControllerTimeLeft.text =
+                    binding.playerController.videoPlayerControllerPlayIc
+                        .setImageResource(R.drawable.ic_play)
+                    binding.playerController.videoPlayerControllerDuration.text =
+                        miliSecToFormatedTime(exoPlayer.duration)
+                    binding.playerController.videoPlayerControllerTimeLeft.text =
                         miliSecToFormatedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.Ended -> {
                     endBuffering()
-                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                    binding.playerController.videoPlayerControllerPlayIc
+                        .setImageResource(R.drawable.ic_play)
                     lifecycleScope.launch {
                         videoPlayerViewModel.intents.send(
                             VideoPlayerIntent.SendCommand(PlayerControllerCommand.Next)
@@ -553,13 +566,14 @@ class VideoPlayerActivity :
                 }
                 is PlaybackStatus.NotReadyAndStopped -> {
                     endBuffering()
-                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                    binding.playerController.videoPlayerControllerPlayIc
+                        .setImageResource(R.drawable.ic_play)
                 }
                 is PlaybackStatus.Buffering -> {
-                    videoPlayerControllerPlayClick.isEnabled = false
-                    videoPlayerControllerBackClick.isEnabled = false
-                    videoPlayerControllerNextClick.isEnabled = false
-                    videoPlayerLoadingAv.visibility = View.VISIBLE
+                    binding.playerController.videoPlayerControllerPlayClick.isEnabled = false
+                    binding.playerController.videoPlayerControllerBackClick.isEnabled = false
+                    binding.playerController.videoPlayerControllerNextClick.isEnabled = false
+                    binding.playerController.videoPlayerLoadingAv.visibility = View.VISIBLE
                 }
             }
         }
@@ -634,13 +648,13 @@ class VideoPlayerActivity :
     }
 
     private fun endBuffering() {
-        videoPlayerControllerPlayClick.visibility = View.VISIBLE
-        videoPlayerControllerBackClick.visibility = View.VISIBLE
-        videoPlayerControllerNextClick.visibility = View.VISIBLE
-        videoPlayerControllerPlayClick.isEnabled = true
-        videoPlayerControllerBackClick.isEnabled = true
-        videoPlayerControllerNextClick.isEnabled = true
-        videoPlayerLoadingAv.visibility = View.INVISIBLE
+        binding.playerController.videoPlayerControllerPlayClick.visibility = View.VISIBLE
+        binding.playerController.videoPlayerControllerBackClick.visibility = View.VISIBLE
+        binding.playerController.videoPlayerControllerNextClick.visibility = View.VISIBLE
+        binding.playerController.videoPlayerControllerPlayClick.isEnabled = true
+        binding.playerController.videoPlayerControllerBackClick.isEnabled = true
+        binding.playerController.videoPlayerControllerNextClick.isEnabled = true
+        binding.playerController.videoPlayerLoadingAv.visibility = View.INVISIBLE
     }
 
     private fun showMainMenu() {
@@ -837,18 +851,18 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun getSubtitleTextColor(): Int{
+    private fun getSubtitleTextColor(): Int {
         videoPlayerViewModel.subtitleTextColor?.let {
             return it
-        }?:let{
+        } ?: let {
             return ContextCompat.getColor(applicationContext, R.color.colorSubtitleWhite)
         }
     }
 
-    private fun getSubtitleHighlightColor(): Int{
-        videoPlayerViewModel.subtitleHighlightColor?.let{
+    private fun getSubtitleHighlightColor(): Int {
+        videoPlayerViewModel.subtitleHighlightColor?.let {
             return it
-        }?:let {
+        } ?: let {
             return ContextCompat.getColor(context, R.color.colorHighlightText)
         }
     }
@@ -869,7 +883,7 @@ class VideoPlayerActivity :
         return spannableString
     }
 
-    private fun onSubtitleOptionClick(){
+    private fun onSubtitleOptionClick() {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.ShowOptions(OPTIONS_SUBTITLE_MENU)
@@ -877,7 +891,7 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onPlaybackSpeedOptionClick(){
+    private fun onPlaybackSpeedOptionClick() {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.ShowOptions(OPTIONS_SPEED_MENU)
@@ -885,7 +899,7 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onAudioOptionClick(){
+    private fun onAudioOptionClick() {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.ShowOptions(OPTIONS_AUDIO_MENU)
@@ -893,7 +907,7 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onChangePlayBackSpeed(speed: Float){
+    private fun onChangePlayBackSpeed(speed: Float) {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SendCommand(
@@ -903,7 +917,7 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onDeleteSubtitle(){
+    private fun onDeleteSubtitle() {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.RemoveSubtitle
@@ -911,8 +925,8 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onSubtitleClick(){
-        SubtitleListDialogView(this){ path ->
+    private fun onSubtitleClick() {
+        SubtitleListDialogView(this) { path ->
             lifecycleScope.launch {
                 videoPlayerViewModel.intents.send(
                     VideoPlayerIntent.LoadSubtitle(path)
@@ -939,7 +953,7 @@ class VideoPlayerActivity :
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         Logger.e("playWhenReady = $playWhenReady")
-        when(playbackState){
+        when (playbackState) {
             ExoPlayer.STATE_BUFFERING -> {
                 Logger.e("ExoPlayer.STATE_BUFFERING")
                 lifecycleScope.launch {
@@ -958,13 +972,15 @@ class VideoPlayerActivity :
             }
             ExoPlayer.STATE_READY -> {
                 Logger.e("ExoPlayer.STATE_READY")
-                videoPlayerControllerSeekbar.valueFrom = 0f
+                binding.playerController.videoPlayerControllerSeekbar.valueFrom = 0f
                 if (exoPlayer.duration != C.TIME_UNSET) {
                     durationSet = true
-                    videoPlayerControllerSeekbar.valueTo = exoPlayer.duration.toFloat()
+                    binding.playerController.videoPlayerControllerSeekbar.valueTo =
+                        exoPlayer.duration.toFloat()
                 } else {
                     durationSet = false
-                    videoPlayerControllerSeekbar.valueTo = (Long.MAX_VALUE).toFloat()
+                    binding.playerController.videoPlayerControllerSeekbar.valueTo =
+                        (Long.MAX_VALUE).toFloat()
                 }
                 lifecycleScope.launch {
                     if (playWhenReady.not()) {
@@ -991,10 +1007,10 @@ class VideoPlayerActivity :
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         Logger.e("onIsPlayingChanged( isPlaying = $isPlaying )")
-        if (isPlaying){
+        if (isPlaying) {
             try {
                 requestAudioFocus()
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 Logger.e(e.message)
             }
         }
@@ -1011,11 +1027,11 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun miliSecToFormatedTime(miliSec: Long): String{
+    private fun miliSecToFormatedTime(miliSec: Long): String {
         if (miliSec < 0) return "--:--"
-        val durationHourInt = (miliSec / (60*60*1000)).toInt()
-        val durationMinInt = ((miliSec % (60*60*1000))/(60*1000)).toInt()
-        val durationSecInt = ((miliSec % (60*1000))/1000).toInt()
+        val durationHourInt = (miliSec / (60 * 60 * 1000)).toInt()
+        val durationMinInt = ((miliSec % (60 * 60 * 1000)) / (60 * 1000)).toInt()
+        val durationSecInt = ((miliSec % (60 * 1000)) / 1000).toInt()
         val durationHourStr = if (durationHourInt < 10) "0$durationHourInt" else "$durationHourInt"
         val durationMinStr = if (durationMinInt < 10) "0$durationMinInt" else "$durationMinInt"
         val durationSecStr = if (durationSecInt < 10) "0$durationSecInt" else "$durationSecInt"
@@ -1023,7 +1039,7 @@ class VideoPlayerActivity :
         else "$durationMinStr:$durationSecStr"
     }
 
-    private fun requestAudioFocus() : Boolean{
+    private fun requestAudioFocus(): Boolean {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val result = audioManager.requestAudioFocus(
             {},

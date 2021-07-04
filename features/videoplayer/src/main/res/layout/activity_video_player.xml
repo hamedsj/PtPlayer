@@ -44,6 +44,7 @@
         tools:ignore="SpUsage" />
 
     <include
+        android:id="@+id/playerController"
         layout="@layout/view_video_player_controller"
         tools:visibility="gone"
         />
