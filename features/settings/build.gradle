@@ -5,6 +5,12 @@ plugins {
     id 'kotlin-android-extensions'
 }
 
+android {
+    buildFeatures {
+        viewBinding = true
+    }
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
     implementation "androidx.appcompat:appcompat:$library.appcompat"

@@ -3,13 +3,13 @@ package me.pitok.settings.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.pitok.androidcore.qulifiers.ApplicationContext
@@ -19,15 +19,16 @@ import me.pitok.lifecycle.ViewModelFactory
 import me.pitok.mvi.MviView
 import me.pitok.navigation.observeNavigation
 import me.pitok.settings.R
+import me.pitok.settings.databinding.FragmentSettingsBinding
 import me.pitok.settings.di.SettingsComponentBuilder
 import me.pitok.settings.intents.SettingsIntent
 import me.pitok.settings.states.SettingsState
 import me.pitok.settings.viewmodels.SettingsViewModel
 import javax.inject.Inject
 
-class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsState> {
+class SettingsFragment : Fragment(), MviView<SettingsState> {
 
-    companion object{
+    companion object {
         const val CLICK_ANIMATION_DURATION = 100L
     }
 
@@ -38,6 +39,8 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
     @Inject
     lateinit var applicationContext: Context
 
+    private lateinit var binding: FragmentSettingsBinding
+
     private val settingsViewModel: SettingsViewModel by viewModels { viewModelFactory }
 
     override fun onAttach(context: Context) {
@@ -45,17 +48,26 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         SettingsComponentBuilder.getComponent().inject(this)
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         settingsViewModel.state.observe(viewLifecycleOwner, ::render)
         settingsViewModel.navigationObservable.observeNavigation(this)
-        settingsBackIc.setOnClickListener(::onBackClickListener)
-        settingsPlaybackSpeedClickable.setOnClickListener(::onPlaybackSpeedOptionClick)
-        settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
-        settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
-        settingsSubtitleFontSizeClickable.setOnClickListener(::onSubtitleFontSizeOptionClick)
-        settingsSubtitleTextColorClickable.setOnClickListener(::onSubtitleTextColorOptionClick)
-        settingsSubtitleHighlightColorClickable.setOnClickListener(::onSubtitleHighlightColorOptionClick)
+        binding.settingsBackIc.setOnClickListener(::onBackClickListener)
+        binding.settingsPlaybackSpeedClickable.setOnClickListener(::onPlaybackSpeedOptionClick)
+        binding.settingsSpeakerVolumeClickable.setOnClickListener(::onSpeakerVolumeOptionClick)
+        binding.settingsScreenOrientationClickable.setOnClickListener(::onScreenOrientationOptionClick)
+        binding.settingsSubtitleFontSizeClickable.setOnClickListener(::onSubtitleFontSizeOptionClick)
+        binding.settingsSubtitleTextColorClickable.setOnClickListener(::onSubtitleTextColorOptionClick)
+        binding.settingsSubtitleHighlightColorClickable.setOnClickListener(::onSubtitleHighlightColorOptionClick)
         lifecycleScope.launch {
             settingsViewModel.intents.send(
                 SettingsIntent.FetchSettedOptions
@@ -130,26 +142,26 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
         when(state){
             is SettingsState.ShowSettedSettings -> {
                 state.defaultPlaybackSpeed?.let {
-                    settingsSettedDefaultPlaybackSpeed.text = it
+                    binding.settingsSettedDefaultPlaybackSpeed.text = it
                 }
                 state.defaultSpeakerVolume?.let{
-                    settingsSettedDefaultSpeakerVolume.text = it
+                    binding.settingsSettedDefaultSpeakerVolume.text = it
                 }?:let {
-                    settingsSettedDefaultSpeakerVolume.text =
+                    binding.settingsSettedDefaultSpeakerVolume.text =
                         if (settingsViewModel.defaultSpeakerVolume == -1)
                             getString(R.string.device_volume)
                         else
                             "${settingsViewModel.defaultSpeakerVolume}%"
                 }
                 state.defaultScreenOrientation?.let{
-                    settingsSettedDefaultScreenOrientation.text =
+                    binding.settingsSettedDefaultScreenOrientation.text =
                         when (it) {
                             SettingsViewModel.LANDSCAPE_ORIENTATION -> getString(R.string.landscape)
                             SettingsViewModel.PORTRAIT_ORIENTATION -> getString(R.string.portrait)
                             else -> getString(R.string.auto_detect)
                         }
                 }?:let {
-                    settingsSettedDefaultScreenOrientation.text =
+                    binding.settingsSettedDefaultScreenOrientation.text =
                         when (settingsViewModel.defaultScreenOrientation) {
                             SettingsViewModel.LANDSCAPE_ORIENTATION -> getString(R.string.landscape)
                             SettingsViewModel.PORTRAIT_ORIENTATION -> getString(R.string.portrait)
@@ -157,22 +169,23 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                         }
                 }
                 state.subtitleFontSize?.let{
-                    settingsSettedSubtitleFontSize.text = "${it}sp"
+                    binding.settingsSettedSubtitleFontSize.text = "${it}sp"
                 }?:let {
-                    settingsSettedSubtitleFontSize.text = "${settingsViewModel.subtitleFontSize}sp"
+                    binding.settingsSettedSubtitleFontSize.text =
+                        "${settingsViewModel.subtitleFontSize}sp"
                 }
                 state.subtitleTextColor?.let{
-                    settingsSettedSubtitleTextColor.setImageResource(
+                    binding.settingsSettedSubtitleTextColor.setImageResource(
                         when (it) {
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleWhite) ->
+                            ContextCompat.getColor(requireContext(), R.color.colorSubtitleWhite) ->
                                 R.drawable.shape_color_preview_white
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlack) ->
-                               R.drawable.shape_color_preview_black
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleRed) ->
+                            ContextCompat.getColor(requireContext(), R.color.colorSubtitleBlack) ->
+                                R.drawable.shape_color_preview_black
+                            ContextCompat.getColor(requireContext(), R.color.colorSubtitleRed) ->
                                 R.drawable.shape_color_preview_red
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleGreen) ->
+                            ContextCompat.getColor(requireContext(), R.color.colorSubtitleGreen) ->
                                 R.drawable.shape_color_preview_green
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleBlue) ->
+                            ContextCompat.getColor(requireContext(), R.color.colorSubtitleBlue) ->
                                 R.drawable.shape_color_preview_blue
                             ContextCompat.getColor(requireContext(),R.color.colorSubtitleYellow) ->
                                 R.drawable.shape_color_preview_yellow
@@ -183,23 +196,38 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                     })
                 }?:let {
                     if (settingsViewModel.subtitleTextColor == null) {
-                        settingsSettedSubtitleTextColor.setImageResource(
+                        binding.settingsSettedSubtitleTextColor.setImageResource(
                             R.drawable.shape_color_preview_white
                         )
                     }
                 }
                 state.subtitleHighlightColor?.let{
-                    settingsSettedSubtitleHighlightColor.setImageResource(
+                    binding.settingsSettedSubtitleHighlightColor.setImageResource(
                         when (it) {
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightWhite) ->
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorSubtitleHighlightWhite
+                            ) ->
                                 R.drawable.shape_color_preview_white
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightBlack) ->
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorSubtitleHighlightBlack
+                            ) ->
                                 R.drawable.shape_color_preview_black
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightRed) ->
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorSubtitleHighlightRed
+                            ) ->
                                 R.drawable.shape_color_preview_red
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightGreen) ->
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorSubtitleHighlightGreen
+                            ) ->
                                 R.drawable.shape_color_preview_green
-                            ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightBlue) ->
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorSubtitleHighlightBlue
+                            ) ->
                                 R.drawable.shape_color_preview_blue
                             ContextCompat.getColor(requireContext(),R.color.colorSubtitleHighlightYellow) ->
                                 R.drawable.shape_color_preview_yellow
@@ -210,7 +238,7 @@ class SettingsFragment: Fragment(R.layout.fragment_settings), MviView<SettingsSt
                         })
                 }?:let {
                     if (settingsViewModel.subtitleHighlightColor == null) {
-                        settingsSettedSubtitleHighlightColor.setImageResource(
+                        binding.settingsSettedSubtitleHighlightColor.setImageResource(
                             R.drawable.shape_color_preview_black
                         )
                     }
