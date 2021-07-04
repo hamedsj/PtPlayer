@@ -23,6 +23,8 @@ import me.pitok.logger.Logger
 import me.pitok.mvi.MviModel
 import me.pitok.options.datasource.PlayerOptionsReadType
 import me.pitok.options.datasource.SubtitleOptionsReadType
+import me.pitok.sdkextentions.EmptyEntity
+import me.pitok.sdkextentions.SingleEvent
 import me.pitok.sdkextentions.isValidUrlWithProtocol
 import me.pitok.subtitle.datasource.SubtitleReaderType
 import me.pitok.subtitle.datasource.SubtitleRequest
@@ -30,9 +32,11 @@ import me.pitok.subtitle.entity.SubtitleEntity
 import me.pitok.subtitle.error.SubtitleError
 import me.pitok.videometadata.datasource.FolderVideosReadType
 import me.pitok.videometadata.requests.FolderVideosRequest
-import me.pitok.videoplayer.intents.PlayerControllerCommmand
+import me.pitok.videoplayer.intents.PlayerControllerCommand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
-import me.pitok.videoplayer.states.*
+import me.pitok.videoplayer.states.SubtitleState
+import me.pitok.videoplayer.states.VideoPlayerState
+import me.pitok.videoplayer.states.VideoPlayerState.Companion.OptionMenus
 import me.pitok.videoplayer.views.VideoPlayerActivity
 import java.io.File
 import javax.inject.Inject
@@ -73,7 +77,12 @@ class VideoPlayerViewModel @Inject constructor(
     override val state: LiveData<VideoPlayerState>
         get() = pState
 
-    private var job1 : CoroutineContext? = null
+    private val pSubtitle = SingleLiveData<SubtitleState>().apply { value = SubtitleState.Clear }
+    val subtitleObservable: LiveData<SubtitleState>
+        get() = pSubtitle
+
+
+    private var job1: CoroutineContext? = null
 
     init {
         handleIntent()
@@ -87,69 +96,81 @@ class VideoPlayerViewModel @Inject constructor(
                         val ratio = videoPlayerIntent.width / videoPlayerIntent.height.toFloat()
                         if (ratio > 1.33f && playerOrientation == AUTO_ORIENTATION){
                             pState.update {
-                                OptionsState.ChangeOrientation(LANDSCAPE_ORIENTATION)
+                                copy(changeOrientation = SingleEvent(LANDSCAPE_ORIENTATION))
                             }
                         }else if (ratio <= 1.33f && playerOrientation == AUTO_ORIENTATION){
                             pState.update {
-                                OptionsState.ChangeOrientation(PORTRAIT_ORIENTATION)
+                                copy(changeOrientation = SingleEvent(PORTRAIT_ORIENTATION))
                             }
                         }
                     }
                     is VideoPlayerIntent.SetPlayBackState -> {
-                        pState.update {videoPlayerIntent.playbackState}
+                        pState.update {
+                            copy(playbackStatus = SingleEvent(videoPlayerIntent.playbackStatus))
+                        }
                     }
                     is VideoPlayerIntent.SendCommand -> {
                         when (videoPlayerIntent.command) {
-                            is PlayerControllerCommmand.Next -> {
+                            is PlayerControllerCommand.Next -> {
                                 startNextVideo()
                             }
-                            is PlayerControllerCommmand.Previous -> {
+                            is PlayerControllerCommand.Previous -> {
                                 startPreviousVideo()
                             }
-                            is PlayerControllerCommmand.Play -> {
-                                pState.update {PLayerCommandState.Start}
-                            }
-                            is PlayerControllerCommmand.Pause -> {
-                                pState.update {PLayerCommandState.Pause}
-                            }
-                            is PlayerControllerCommmand.Prepare -> {
+                            is PlayerControllerCommand.Play -> {
                                 pState.update {
-                                    PLayerCommandState.Prepare(buildVideoSource())
+                                    copy(play = SingleEvent(EmptyEntity))
                                 }
                             }
-                            is PlayerControllerCommmand.ChangePlaybackSpeed -> {
+                            is PlayerControllerCommand.Pause -> {
                                 pState.update {
-                                    PLayerCommandState.ChangeSpeed(
-                                        videoPlayerIntent.command.spped
-                                    )
+                                    copy(pause = SingleEvent(EmptyEntity))
+                                }
+                            }
+                            is PlayerControllerCommand.Prepare -> {
+                                pState.update {
+                                    copy(prepare = SingleEvent(buildVideoSource()))
+                                }
+                            }
+                            is PlayerControllerCommand.ChangePlaybackSpeed -> {
+                                pState.update {
+                                    copy(changeSpeed = SingleEvent(videoPlayerIntent.command.speed))
                                 }
                             }
                         }
                     }
                     is VideoPlayerIntent.ShowOptions -> {
                         when(videoPlayerIntent.OptionsMenu){
-                            VideoPlayerActivity.OPTIONS_MAIN_MENU ->{
-                                pState.update {OptionsState.ShowMainMenu}
+                            VideoPlayerActivity.OPTIONS_MAIN_MENU -> {
+                                pState.update {
+                                    copy(showOptionsMenu = SingleEvent(OptionMenus.MainMenu))
+                                }
                             }
-                            VideoPlayerActivity.OPTIONS_SUBTITLE_MENU ->{
-                                pState.update {OptionsState.ShowSubtitleMenu}
+                            VideoPlayerActivity.OPTIONS_SUBTITLE_MENU -> {
+                                pState.update {
+                                    copy(showOptionsMenu = SingleEvent(OptionMenus.SubtitleMenu))
+                                }
                             }
-                            VideoPlayerActivity.OPTIONS_SPEED_MENU ->{
-                                pState.update {OptionsState.ShowPlaybackSpeedMenu}
+                            VideoPlayerActivity.OPTIONS_SPEED_MENU -> {
+                                pState.update {
+                                    copy(showOptionsMenu = SingleEvent(OptionMenus.SpeedMenu))
+                                }
                             }
-                            VideoPlayerActivity.OPTIONS_AUDIO_MENU ->{
-                                pState.update {OptionsState.ShowAudioMenu}
+                            VideoPlayerActivity.OPTIONS_AUDIO_MENU -> {
+                                pState.update {
+                                    copy(showOptionsMenu = SingleEvent(OptionMenus.AudioMenu))
+                                }
                             }
                         }
                     }
                     is VideoPlayerIntent.SubtitleProgressChanged -> {
                         getSubtitleContent(videoPlayerIntent.progress)?.apply {
                                 withContext(Dispatchers.Main) {
-                                    pState.update { SubtitleState.Show(content) }
+                                    pSubtitle.update { SubtitleState.Show(content) }
                                 }
                             } ?: run {
                                 withContext(Dispatchers.Main) {
-                                    pState.update { SubtitleState.Clear }
+                                    pSubtitle.update { SubtitleState.Clear }
                                 }
                             }
                     }
@@ -166,18 +187,20 @@ class VideoPlayerViewModel @Inject constructor(
                         val subtitleOptions = subtitleOptionsReader.read()
                         withContext(Dispatchers.Main){
                             pState.update {
-                                PLayerCommandState.ChangeSpeed(playerOptions.deafultSpeed)
+                                copy(changeSpeed = SingleEvent(playerOptions.deafultSpeed))
                             }
                             if (playerOptions.defaultSpeakerVolume != -1f){
                                 pState.update {
-                                    PLayerCommandState.ChangeSpeakerVolume(
-                                        playerOptions.defaultSpeakerVolume
+                                    copy(
+                                        changeSpeakerVolume = SingleEvent(
+                                            playerOptions.defaultSpeakerVolume
+                                        )
                                     )
                                 }
                             }
                             playerOrientation = playerOptions.orientation
                             pState.update {
-                                OptionsState.ChangeOrientation(playerOptions.orientation)
+                                copy(changeOrientation = SingleEvent(playerOptions.orientation))
                             }
                             subtitleTextSize = requireNotNull(subtitleOptions.fontSize)
                             subtitleTextColor = subtitleOptions.fontColor
@@ -252,24 +275,38 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
-    private fun startNextVideo(){
+    private fun startNextVideo() {
         if (videoList.isEmpty()) return
         val position = videoList.indexOf(activePath)
-        val nextPosition = if (position == -1 || position == videoList.size - 1) 0 else (position + 1)
+        val nextPosition =
+            if (position == -1 || position == videoList.size - 1) 0 else (position + 1)
         activePath = videoList[nextPosition]
-        pState.update {PLayerCommandState.Prepare(buildFromPath(requireNotNull(activePath))) }
-        pState.update {PLayerCommandState.SeekToPosition(0)}
-        pState.update {PLayerCommandState.Start}
+        pState.update {
+            copy(prepare = SingleEvent(buildFromPath(requireNotNull(activePath))))
+        }
+        pState.update {
+            copy(seekToPosition = SingleEvent(0L))
+        }
+        pState.update {
+            copy(play = SingleEvent(EmptyEntity))
+        }
     }
 
-    private fun startPreviousVideo(){
+    private fun startPreviousVideo() {
         if (videoList.isEmpty()) return
         val position = videoList.indexOf(activePath)
-        val nextPosition = if (position == -1 || position == 0) videoList.size - 1 else (position - 1)
+        val nextPosition =
+            if (position == -1 || position == 0) videoList.size - 1 else (position - 1)
         activePath = videoList[nextPosition]
-        pState.update {PLayerCommandState.Prepare(buildFromPath(requireNotNull(activePath)))}
-        pState.update {PLayerCommandState.SeekToPosition(0)}
-        pState.update {PLayerCommandState.Start}
+        pState.update {
+            copy(prepare = SingleEvent(buildFromPath(requireNotNull(activePath))))
+        }
+        pState.update {
+            copy(seekToPosition = SingleEvent(0L))
+        }
+        pState.update {
+            copy(play = SingleEvent(EmptyEntity))
+        }
     }
 
     private suspend fun getSubtitleContent(currentMiliSec: Long) : SubtitleEntity? {
@@ -291,10 +328,10 @@ class VideoPlayerViewModel @Inject constructor(
             Logger.e(error.message)
             when(error){
                 is SubtitleError.SubtitleFileNotFound -> {
-                    pState.update { SubtitleState.SubtitleNotFoundError }
+                    pSubtitle.update { SubtitleState.SubtitleNotFoundError }
                 }
                 is SubtitleError.ReadingSubtitleFileError -> {
-                    pState.update { SubtitleState.SubtitleReadingError }
+                    pSubtitle.update { SubtitleState.SubtitleReadingError }
                 }
             }
         }

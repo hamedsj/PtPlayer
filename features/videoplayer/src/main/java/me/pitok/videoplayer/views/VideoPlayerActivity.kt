@@ -47,9 +47,12 @@ import me.pitok.sdkextentions.toPx
 import me.pitok.subtitle.components.SubtitleBackgroundColorSpan
 import me.pitok.videoplayer.R
 import me.pitok.videoplayer.di.builder.VideoPlayerComponentBuilder
-import me.pitok.videoplayer.intents.PlayerControllerCommmand
+import me.pitok.videoplayer.intents.PlayerControllerCommand
 import me.pitok.videoplayer.intents.VideoPlayerIntent
-import me.pitok.videoplayer.states.*
+import me.pitok.videoplayer.states.SubtitleState
+import me.pitok.videoplayer.states.VideoPlayerState
+import me.pitok.videoplayer.states.VideoPlayerState.Companion.OptionMenus
+import me.pitok.videoplayer.states.VideoPlayerState.Companion.PlaybackStatus
 import me.pitok.videoplayer.viewmodels.VideoPlayerViewModel
 import javax.inject.Inject
 
@@ -99,6 +102,10 @@ class VideoPlayerActivity :
         setInitialViews(savedInstanceState)
         val screenWidth = getScreenWidth()
         videoPlayerViewModel.state.observe(this@VideoPlayerActivity, ::render)
+        videoPlayerViewModel.subtitleObservable.observe(
+            this@VideoPlayerActivity,
+            ::observeSubtitleEvents
+        )
         videoPlayerController.setOnTouchListener(object : View.OnTouchListener {
             private val gestureDetector = GestureDetector(context, object :
                 GestureDetector.SimpleOnGestureListener() {
@@ -132,7 +139,7 @@ class VideoPlayerActivity :
         exoPlayer.seekTo(0L)
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
-                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Prepare)
+                VideoPlayerIntent.SendCommand(PlayerControllerCommand.Prepare)
             )
         }
         exoPlayer.addListener(this)
@@ -245,8 +252,8 @@ class VideoPlayerActivity :
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SendCommand(
-                    if (exoPlayer.playWhenReady) PlayerControllerCommmand.Pause
-                    else PlayerControllerCommmand.Play
+                    if (exoPlayer.playWhenReady) PlayerControllerCommand.Pause
+                    else PlayerControllerCommand.Play
                 )
             )
         }
@@ -255,7 +262,7 @@ class VideoPlayerActivity :
     private fun onNextIcClick(view: View) {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
-                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Next)
+                VideoPlayerIntent.SendCommand(PlayerControllerCommand.Next)
             )
         }
     }
@@ -263,7 +270,7 @@ class VideoPlayerActivity :
     private fun onBackIcClick(view: View) {
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
-                VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Previous)
+                VideoPlayerIntent.SendCommand(PlayerControllerCommand.Previous)
             )
         }
     }
@@ -496,283 +503,18 @@ class VideoPlayerActivity :
         super.onDestroy()
     }
 
-    override fun render(state: VideoPlayerState) {
-        if (state !is SubtitleState)
-            Logger.e("render($state)")
-        if (state !is PlaybackState.Buffering){
-            videoPlayerControllerPlayClick.visibility = View.VISIBLE
-            videoPlayerControllerBackClick.visibility = View.VISIBLE
-            videoPlayerControllerNextClick.visibility = View.VISIBLE
-            videoPlayerControllerPlayClick.isEnabled = true
-            videoPlayerControllerBackClick.isEnabled = true
-            videoPlayerControllerNextClick.isEnabled = true
-            videoPlayerLoadingAv.visibility = View.INVISIBLE
-        }
-        when(state){
-            is PlaybackState.Playing -> {
-                videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
-                videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                videoPlayerControllerTimeLeft.text =
-                    miliSecToFormatedTime(exoPlayer.currentPosition)
-            }
-            is PlaybackState.ReadyAndStoped -> {
-                videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
-                videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
-                videoPlayerControllerTimeLeft.text =
-                    miliSecToFormatedTime(exoPlayer.currentPosition)
-            }
-            is PlaybackState.Ended -> {
-                videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
-                lifecycleScope.launch {
-                    videoPlayerViewModel.intents.send(
-                        VideoPlayerIntent.SendCommand(PlayerControllerCommmand.Next)
-                    )
-                }
-            }
-            is PlaybackState.NotReadyAndStoped -> {
-                videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
-            }
-            is PlaybackState.Buffering -> {
-                videoPlayerControllerPlayClick.isEnabled = false
-                videoPlayerControllerBackClick.isEnabled = false
-                videoPlayerControllerNextClick.isEnabled = false
-                videoPlayerLoadingAv.visibility = View.VISIBLE
-            }
-            is PLayerCommandState.Start -> {
-                exoPlayer.playWhenReady = true
-            }
-            is PLayerCommandState.Pause -> {
-                exoPlayer.playWhenReady = false
-            }
-            is PLayerCommandState.SeekToPosition -> {
-                exoPlayer.seekTo(state.position)
-            }
-            is PLayerCommandState.Prepare -> {
-                state.mediaSource?.apply {
-                    lifecycleScope.launch {
-                        videoPlayerViewModel.intents.send(
-                            VideoPlayerIntent.SetPlayBackState(PlaybackState.Buffering)
-                        )
-                    }
-                    exoPlayer.prepare(this)
-                } ?: apply {
-                    Toast.makeText(context, "Invalid Url Path!", Toast.LENGTH_LONG).show()
-                    finish()
-                }
-            }
-            is PLayerCommandState.ChangeSpeed -> {
-                exoPlayer.setPlaybackParameters(
-                    PlaybackParameters(
-                        state.speed,
-                        exoPlayer.playbackParameters.pitch,
-                        exoPlayer.playbackParameters.skipSilence
-                    )
-                )
-            }
-            is PLayerCommandState.ChangeSpeakerVolume -> {
-                exoPlayer.volume =
-                    if (state.speakerVolume > 1f) 1f
-                    else if (state.speakerVolume < 0f) 0f
-                    else state.speakerVolume
-            }
-            is OptionsState.ShowMainMenu -> {
-                ChooserBottomSheetView(this).apply {
-                    sheetTitle = ""
-                    sheetItems = listOf(
-                        BottomSheetItemEntity(
-                            R.drawable.ic_closed_caption,
-                            itemSecondaryIconResource = null,
-                            R.string.subtitle,
-                            if (videoPlayerViewModel.isSubtitleReady())
-                                ::onSubtitleOptionClick
-                            else
-                                ::onSubtitleClick
-                        ),
-                        BottomSheetItemEntity(
-                            R.drawable.ic_speed,
-                            itemSecondaryIconResource = null,
-                            R.string.playback_speed,
-                            ::onPlaybackSpeedOptionClick
-                        ),
-                        BottomSheetItemEntity(
-                            R.drawable.ic_audio,
-                            itemSecondaryIconResource = null,
-                            R.string.audio,
-                            ::onAudioOptionClick
-                        ),
-                        BottomSheetItemEntity(
-                            R.drawable.ic_screen_rotation,
-                            itemSecondaryIconResource = null,
-                            R.string.rotate_screen,
-                            ::onScreenRotationOptionClick
-                        )
-                    )
-                    show()
-                }
-            }
-            is OptionsState.ShowSubtitleMenu -> {
-                ChooserBottomSheetView(this).apply {
-                    sheetTitle = ""
-                    sheetItems = listOf(
-                        BottomSheetItemEntity(
-                            R.drawable.ic_closed_caption,
-                            itemSecondaryIconResource = null,
-                            R.string.choose_subtitle,
-                            ::onSubtitleClick
-                        ),
-                        BottomSheetItemEntity(
-                            R.drawable.ic_delete,
-                            itemSecondaryIconResource = null,
-                            R.string.remove_subtitle,
-                            ::onDeleteSubtitle
-                        )
-                    )
-                    show()
-                }
-            }
-            is OptionsState.ShowPlaybackSpeedMenu -> {
-                ChooserBottomSheetView(this).apply {
-                    sheetTitle = ""
-                    sheetItems = listOf(
-                        BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 0.25f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._0_25x,
-                            { onChangePlayBackSpeed(0.25f) }
-                        ),
-                        BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 0.5f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._0_50x,
-                            { onChangePlayBackSpeed(0.5f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 0.75f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._0_75x,
-                            { onChangePlayBackSpeed(0.75f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 1f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._1x,
-                            { onChangePlayBackSpeed(1f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 1.25f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._1_25x,
-                            { onChangePlayBackSpeed(1.25f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 1.5f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._1_50x,
-                            { onChangePlayBackSpeed(1.5f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 1.75f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._1_75x,
-                            { onChangePlayBackSpeed(1.75f) }
-                        ), BottomSheetItemEntity(
-                            if (exoPlayer.playbackParameters.speed == 2f)
-                                R.drawable.ic_check
-                            else
-                                null,
-                            itemSecondaryIconResource = null,
-                            R.string._2x,
-                            { onChangePlayBackSpeed(2f) }
-                        )
-                    )
-                    show()
-                }
-            }
-            is OptionsState.ShowAudioMenu -> {
-                exoPlayer.trackSelector
-                    .currentMappedTrackInfo
-                    ?.getTrackGroups(C.TRACK_TYPE_AUDIO)
-                    ?.apply {
-                        val audioTrackList = mutableListOf<BottomSheetItemEntity>()
-                        audioTrackList.add(
-                            BottomSheetItemEntity(
-                                if (!exoPlayer.isAudioRendererEnabled())
-                                    R.drawable.ic_check
-                                else
-                                    null,
-                                itemSecondaryIconResource = null,
-                                R.string.disable_audio,
-                                { exoPlayer.disableAudioRenderer() },
-                                null
-                            )
-                        )
-                        for (groupIndex in 0 until length) {
-                            for (formatIndex in 0 until get(groupIndex).length) {
-                                audioTrackList.add(
-                                    BottomSheetItemEntity(
-                                        if (exoPlayer.isGroupIndexSelected(groupIndex))
-                                            R.drawable.ic_check
-                                        else
-                                            null,
-                                        itemSecondaryIconResource = null,
-                                        null,
-                                        { exoPlayer.selectTrackGroup(groupIndex) },
-                                        DefaultTrackNameProvider(resources).getTrackName(
-                                            get(groupIndex).getFormat(formatIndex)
-                                        )
-                                    )
-                                )
-                            }
-                        }
-                        ChooserBottomSheetView(this@VideoPlayerActivity).apply {
-                            sheetTitle = ""
-                            sheetItems = audioTrackList
-                            show()
-                        }
-                    }
-            }
-            is OptionsState.ChangeOrientation -> {
-                if (state.orientation == VideoPlayerViewModel.LANDSCAPE_ORIENTATION &&
-                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                ) {
-                    videoPlayerViewModel.playerOrientation =
-                        VideoPlayerViewModel.LANDSCAPE_ORIENTATION
-                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                } else if (state.orientation == VideoPlayerViewModel.PORTRAIT_ORIENTATION &&
-                    requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                ) {
-                    videoPlayerViewModel.playerOrientation =
-                        VideoPlayerViewModel.PORTRAIT_ORIENTATION
-                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                }
-            }
+    private fun observeSubtitleEvents(event: SubtitleState) {
+        when (event) {
             is SubtitleState.Clear -> {
                 subtitleTv.text = ""
             }
             is SubtitleState.Show -> {
-                Logger.e("Subtitle::: ${state.subText}")
                 subtitleTv.setTextColor(getSubtitleTextColor())
                 subtitleTv.setTextSize(
                     TypedValue.COMPLEX_UNIT_SP,
                     videoPlayerViewModel.subtitleTextSize.toFloat()
                 )
-                subtitleTv.text = getSubtitleSpannableFromString(state.subText)
+                subtitleTv.text = getSubtitleSpannableFromString(event.subText)
             }
             is SubtitleState.SubtitleReadingError -> {
                 Toast.makeText(context, "Error in reading subtitle file!", Toast.LENGTH_LONG).show()
@@ -783,11 +525,295 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun onScreenRotationOptionClick(){
+    override fun render(state: VideoPlayerState) {
+//        if (state !is PlaybackState.Buffering){
+//            videoPlayerControllerPlayClick.visibility = View.VISIBLE
+//            videoPlayerControllerBackClick.visibility = View.VISIBLE
+//            videoPlayerControllerNextClick.visibility = View.VISIBLE
+//            videoPlayerControllerPlayClick.isEnabled = true
+//            videoPlayerControllerBackClick.isEnabled = true
+//            videoPlayerControllerNextClick.isEnabled = true
+//            videoPlayerLoadingAv.visibility = View.INVISIBLE
+//        }
+        state.playbackStatus?.ifNotHandled { status ->
+            when (status) {
+                is PlaybackStatus.Playing -> {
+                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
+                    videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
+                    videoPlayerControllerTimeLeft.text =
+                        miliSecToFormatedTime(exoPlayer.currentPosition)
+                }
+                is PlaybackStatus.ReadyAndStopped -> {
+                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                    videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
+                    videoPlayerControllerTimeLeft.text =
+                        miliSecToFormatedTime(exoPlayer.currentPosition)
+                }
+                is PlaybackStatus.Ended -> {
+                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                    lifecycleScope.launch {
+                        videoPlayerViewModel.intents.send(
+                            VideoPlayerIntent.SendCommand(PlayerControllerCommand.Next)
+                        )
+                    }
+                }
+                is PlaybackStatus.NotReadyAndStopped -> {
+                    videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
+                }
+                is PlaybackStatus.Buffering -> {
+                    videoPlayerControllerPlayClick.isEnabled = false
+                    videoPlayerControllerBackClick.isEnabled = false
+                    videoPlayerControllerNextClick.isEnabled = false
+                    videoPlayerLoadingAv.visibility = View.VISIBLE
+                }
+            }
+        }
+        state.play?.ifNotHandled {
+            exoPlayer.playWhenReady = true
+        }
+        state.pause?.ifNotHandled {
+            exoPlayer.playWhenReady = false
+        }
+        state.seekToPosition?.ifNotHandled { position ->
+            exoPlayer.seekTo(position)
+        }
+        state.prepare?.ifNotHandled { mediaSource ->
+            mediaSource?.apply {
+                lifecycleScope.launch {
+                    videoPlayerViewModel.intents.send(
+                        VideoPlayerIntent.SetPlayBackState(PlaybackStatus.Buffering)
+                    )
+                }
+                exoPlayer.prepare(this)
+            } ?: apply {
+                Toast.makeText(context, "Invalid Url Path!", Toast.LENGTH_LONG).show()
+                finish()
+            }
+        }
+        state.changeSpeed?.ifNotHandled { speed ->
+            exoPlayer.setPlaybackParameters(
+                PlaybackParameters(
+                    speed,
+                    exoPlayer.playbackParameters.pitch,
+                    exoPlayer.playbackParameters.skipSilence
+                )
+            )
+        }
+
+        state.changeSpeakerVolume?.ifNotHandled { speakerVolume ->
+            exoPlayer.volume =
+                if (speakerVolume > 1f) 1f
+                else if (speakerVolume < 0f) 0f
+                else speakerVolume
+        }
+
+        state.changeOrientation?.ifNotHandled { orientation ->
+            if (orientation == VideoPlayerViewModel.LANDSCAPE_ORIENTATION &&
+                requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            ) {
+                videoPlayerViewModel.playerOrientation =
+                    VideoPlayerViewModel.LANDSCAPE_ORIENTATION
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            } else if (orientation == VideoPlayerViewModel.PORTRAIT_ORIENTATION &&
+                requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            ) {
+                videoPlayerViewModel.playerOrientation =
+                    VideoPlayerViewModel.PORTRAIT_ORIENTATION
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
+
+        state.showOptionsMenu?.ifNotHandled { menu ->
+            when (menu) {
+                is OptionMenus.MainMenu -> showMainMenu()
+                is OptionMenus.SubtitleMenu -> showSubtitleMenu()
+                is OptionMenus.SpeedMenu -> showSpeedMenu()
+                is OptionMenus.AudioMenu -> showAudioMenu()
+            }
+        }
+    }
+
+    private fun showMainMenu() {
+        ChooserBottomSheetView(this).apply {
+            sheetTitle = ""
+            sheetItems = listOf(
+                BottomSheetItemEntity(
+                    R.drawable.ic_closed_caption,
+                    itemSecondaryIconResource = null,
+                    R.string.subtitle,
+                    if (videoPlayerViewModel.isSubtitleReady())
+                        ::onSubtitleOptionClick
+                    else
+                        ::onSubtitleClick
+                ),
+                BottomSheetItemEntity(
+                    R.drawable.ic_speed,
+                    itemSecondaryIconResource = null,
+                    R.string.playback_speed,
+                    ::onPlaybackSpeedOptionClick
+                ),
+                BottomSheetItemEntity(
+                    R.drawable.ic_audio,
+                    itemSecondaryIconResource = null,
+                    R.string.audio,
+                    ::onAudioOptionClick
+                ),
+                BottomSheetItemEntity(
+                    R.drawable.ic_screen_rotation,
+                    itemSecondaryIconResource = null,
+                    R.string.rotate_screen,
+                    ::onScreenRotationOptionClick
+                )
+            )
+            show()
+        }
+    }
+
+    private fun showSubtitleMenu() {
+        ChooserBottomSheetView(this).apply {
+            sheetTitle = ""
+            sheetItems = listOf(
+                BottomSheetItemEntity(
+                    R.drawable.ic_closed_caption,
+                    itemSecondaryIconResource = null,
+                    R.string.choose_subtitle,
+                    ::onSubtitleClick
+                ),
+                BottomSheetItemEntity(
+                    R.drawable.ic_delete,
+                    itemSecondaryIconResource = null,
+                    R.string.remove_subtitle,
+                    ::onDeleteSubtitle
+                )
+            )
+            show()
+        }
+    }
+
+    private fun showSpeedMenu() {
+        ChooserBottomSheetView(this).apply {
+            sheetTitle = ""
+            sheetItems = listOf(
+                BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 0.25f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._0_25x,
+                    { onChangePlayBackSpeed(0.25f) }
+                ),
+                BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 0.5f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._0_50x,
+                    { onChangePlayBackSpeed(0.5f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 0.75f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._0_75x,
+                    { onChangePlayBackSpeed(0.75f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 1f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._1x,
+                    { onChangePlayBackSpeed(1f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 1.25f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._1_25x,
+                    { onChangePlayBackSpeed(1.25f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 1.5f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._1_50x,
+                    { onChangePlayBackSpeed(1.5f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 1.75f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._1_75x,
+                    { onChangePlayBackSpeed(1.75f) }
+                ), BottomSheetItemEntity(
+                    if (exoPlayer.playbackParameters.speed == 2f)
+                        R.drawable.ic_check
+                    else
+                        null,
+                    itemSecondaryIconResource = null,
+                    R.string._2x,
+                    { onChangePlayBackSpeed(2f) }
+                )
+            )
+            show()
+        }
+    }
+
+    private fun showAudioMenu() {
+        exoPlayer.trackSelector
+            .currentMappedTrackInfo
+            ?.getTrackGroups(C.TRACK_TYPE_AUDIO)
+            ?.apply {
+                val audioTrackList = mutableListOf<BottomSheetItemEntity>()
+                audioTrackList.add(
+                    BottomSheetItemEntity(
+                        if (!exoPlayer.isAudioRendererEnabled())
+                            R.drawable.ic_check
+                        else
+                            null,
+                        itemSecondaryIconResource = null,
+                        R.string.disable_audio,
+                        { exoPlayer.disableAudioRenderer() },
+                        null
+                    )
+                )
+                for (groupIndex in 0 until length) {
+                    for (formatIndex in 0 until get(groupIndex).length) {
+                        audioTrackList.add(
+                            BottomSheetItemEntity(
+                                if (exoPlayer.isGroupIndexSelected(groupIndex))
+                                    R.drawable.ic_check
+                                else
+                                    null,
+                                itemSecondaryIconResource = null,
+                                null,
+                                { exoPlayer.selectTrackGroup(groupIndex) },
+                                DefaultTrackNameProvider(resources).getTrackName(
+                                    get(groupIndex).getFormat(formatIndex)
+                                )
+                            )
+                        )
+                    }
+                }
+                ChooserBottomSheetView(this@VideoPlayerActivity).apply {
+                    sheetTitle = ""
+                    sheetItems = audioTrackList
+                    show()
+                }
+            }
+    }
+
+    private fun onScreenRotationOptionClick() {
         Logger.d("onScreenRotationOptionClick called : $requestedOrientation")
         videoPlayerViewModel.resumePosition = exoPlayer.currentPosition
         videoPlayerViewModel.resumeWindow = exoPlayer.currentWindowIndex
-        when (requestedOrientation){
+        when (requestedOrientation) {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE -> {
                 videoPlayerViewModel.playerOrientation =
                     VideoPlayerViewModel.PORTRAIT_ORIENTATION
@@ -861,7 +887,7 @@ class VideoPlayerActivity :
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SendCommand(
-                    PlayerControllerCommmand.ChangePlaybackSpeed(speed)
+                    PlayerControllerCommand.ChangePlaybackSpeed(speed)
                 )
             )
         }
@@ -908,7 +934,7 @@ class VideoPlayerActivity :
                 Logger.e("ExoPlayer.STATE_BUFFERING")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
-                        VideoPlayerIntent.SetPlayBackState(PlaybackState.Buffering)
+                        VideoPlayerIntent.SetPlayBackState(PlaybackStatus.Buffering)
                     )
                 }
             }
@@ -916,7 +942,7 @@ class VideoPlayerActivity :
                 Logger.e("ExoPlayer.STATE_ENDED")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
-                        VideoPlayerIntent.SetPlayBackState(PlaybackState.Ended)
+                        VideoPlayerIntent.SetPlayBackState(PlaybackStatus.Ended)
                     )
                 }
             }
@@ -933,11 +959,11 @@ class VideoPlayerActivity :
                 lifecycleScope.launch {
                     if (playWhenReady.not()) {
                         videoPlayerViewModel.intents.send(
-                            VideoPlayerIntent.SetPlayBackState(PlaybackState.ReadyAndStoped)
+                            VideoPlayerIntent.SetPlayBackState(PlaybackStatus.ReadyAndStopped)
                         )
                     } else {
                         videoPlayerViewModel.intents.send(
-                            VideoPlayerIntent.SetPlayBackState(PlaybackState.Playing)
+                            VideoPlayerIntent.SetPlayBackState(PlaybackStatus.Playing)
                         )
                     }
                 }
@@ -946,7 +972,7 @@ class VideoPlayerActivity :
                 Logger.e("ExoPlayer.STATE_IDLE")
                 lifecycleScope.launch {
                     videoPlayerViewModel.intents.send(
-                        VideoPlayerIntent.SetPlayBackState(PlaybackState.WithoutVideoSource)
+                        VideoPlayerIntent.SetPlayBackState(PlaybackStatus.WithoutVideoSource)
                     )
                 }
             }
@@ -966,9 +992,9 @@ class VideoPlayerActivity :
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SetPlayBackState(
                     if (isPlaying) {
-                        PlaybackState.Playing
+                        PlaybackStatus.Playing
                     } else {
-                        PlaybackState.ReadyAndStoped
+                        PlaybackStatus.ReadyAndStopped
                     }
                 )
             )
