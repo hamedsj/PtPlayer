@@ -526,30 +526,24 @@ class VideoPlayerActivity :
     }
 
     override fun render(state: VideoPlayerState) {
-//        if (state !is PlaybackState.Buffering){
-//            videoPlayerControllerPlayClick.visibility = View.VISIBLE
-//            videoPlayerControllerBackClick.visibility = View.VISIBLE
-//            videoPlayerControllerNextClick.visibility = View.VISIBLE
-//            videoPlayerControllerPlayClick.isEnabled = true
-//            videoPlayerControllerBackClick.isEnabled = true
-//            videoPlayerControllerNextClick.isEnabled = true
-//            videoPlayerLoadingAv.visibility = View.INVISIBLE
-//        }
         state.playbackStatus?.ifNotHandled { status ->
             when (status) {
                 is PlaybackStatus.Playing -> {
+                    endBuffering()
                     videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_pause)
                     videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
                     videoPlayerControllerTimeLeft.text =
                         miliSecToFormatedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.ReadyAndStopped -> {
+                    endBuffering()
                     videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
                     videoPlayerControllerDuration.text = miliSecToFormatedTime(exoPlayer.duration)
                     videoPlayerControllerTimeLeft.text =
                         miliSecToFormatedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.Ended -> {
+                    endBuffering()
                     videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
                     lifecycleScope.launch {
                         videoPlayerViewModel.intents.send(
@@ -558,6 +552,7 @@ class VideoPlayerActivity :
                     }
                 }
                 is PlaybackStatus.NotReadyAndStopped -> {
+                    endBuffering()
                     videoPlayerControllerPlayIc.setImageResource(R.drawable.ic_play)
                 }
                 is PlaybackStatus.Buffering -> {
@@ -568,15 +563,19 @@ class VideoPlayerActivity :
                 }
             }
         }
+
         state.play?.ifNotHandled {
             exoPlayer.playWhenReady = true
         }
+
         state.pause?.ifNotHandled {
             exoPlayer.playWhenReady = false
         }
+
         state.seekToPosition?.ifNotHandled { position ->
             exoPlayer.seekTo(position)
         }
+
         state.prepare?.ifNotHandled { mediaSource ->
             mediaSource?.apply {
                 lifecycleScope.launch {
@@ -590,6 +589,7 @@ class VideoPlayerActivity :
                 finish()
             }
         }
+
         state.changeSpeed?.ifNotHandled { speed ->
             exoPlayer.setPlaybackParameters(
                 PlaybackParameters(
@@ -631,6 +631,16 @@ class VideoPlayerActivity :
                 is OptionMenus.AudioMenu -> showAudioMenu()
             }
         }
+    }
+
+    private fun endBuffering() {
+        videoPlayerControllerPlayClick.visibility = View.VISIBLE
+        videoPlayerControllerBackClick.visibility = View.VISIBLE
+        videoPlayerControllerNextClick.visibility = View.VISIBLE
+        videoPlayerControllerPlayClick.isEnabled = true
+        videoPlayerControllerBackClick.isEnabled = true
+        videoPlayerControllerNextClick.isEnabled = true
+        videoPlayerLoadingAv.visibility = View.INVISIBLE
     }
 
     private fun showMainMenu() {
