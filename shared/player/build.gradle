@@ -7,11 +7,14 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$library.kotlin"
 
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$library.lifecycle"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$library.lifecycle"
+
     implementation "com.google.android.exoplayer:exoplayer:$library.exoplayer"
 
     implementation "com.google.dagger:dagger:$library.dagger"
     kapt "com.google.dagger:dagger-compiler:$library.dagger"
-    implementation "io.reactivex.rxjava3:rxandroid:$library.rxandroid"
 
     implementation project(":libraries:dependencyinjection")
     implementation project(":libraries:androidcore")

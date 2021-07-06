@@ -6,71 +6,82 @@ import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.analytics.AnalyticsCollector
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.util.Clock
-import com.google.android.exoplayer2.util.Util
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.disposables.Disposable
-import me.pitok.logger.Logger
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-class IndictableSimpleExoPlayer(context: Context, val trackSelector: DefaultTrackSelector = DefaultTrackSelector(context)): SimpleExoPlayer(
-    context,
-    DefaultRenderersFactory(context),
-    trackSelector,
-    DefaultLoadControl.Builder().setBufferDurationsMs(
-        10*1000,
-        60*1000,
-        2000,
-        3000).createDefaultLoadControl(),
-    DefaultBandwidthMeter.getSingletonInstance(context),
-    AnalyticsCollector(Clock.DEFAULT),
-    Clock.DEFAULT,
-    Util.getLooper()
+
+class IndictableSimpleExoPlayer(
+    context: Context,
+    val trackSelector: DefaultTrackSelector = DefaultTrackSelector(
+        context
+    )
+) : SimpleExoPlayer(
+    Builder(
+        context,
+        DefaultRenderersFactory(context),
+        trackSelector,
+        DefaultMediaSourceFactory(context),
+        DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                10 * 1000,
+                60 * 1000,
+                2000,
+                3000
+            )
+            .build(),
+        DefaultBandwidthMeter.getSingletonInstance(context),
+        AnalyticsCollector(Clock.DEFAULT),
+    )
 ) {
 
 
-    private var positionObservable : Observable<Long>? = null
-    private var positionDisposable : Disposable? = null
-    var onPositionChanged : (position: Long) -> Unit = {_->}
+    var onPositionChanged: (position: Long) -> Unit = { _ -> }
+    private var job1: CoroutineContext? = null
+    private var lastPositionSent = 0L
 
-    private fun enableOnProgressChanged(){
-        positionObservable =  Observable.interval(200, TimeUnit.MILLISECONDS)
-            .map { currentPosition }
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext { position ->
-                onPositionChanged.invoke(position)
+
+    private fun enableOnProgressChanged() {
+        lastPositionSent = System.currentTimeMillis()
+        job1 = GlobalScope.launch {
+            while (true) {
+                if (System.currentTimeMillis() - lastPositionSent < 200) {
+                    delay(75)
+                    continue
+                }
+                withContext(Dispatchers.Main) {
+                    onPositionChanged.invoke(currentPosition)
+                }
+                lastPositionSent = System.currentTimeMillis()
             }
-        positionDisposable = positionObservable?.subscribe()
+        }
     }
 
-    private fun disableOnProgressChanged(){
-        if (positionDisposable != null &&  !requireNotNull(positionDisposable?.isDisposed)) {
-            positionDisposable?.dispose()
-        }
-        positionDisposable = null
+    private fun disableOnProgressChanged() {
+        job1?.cancel()
+        job1 = null
     }
 
     override fun setPlayWhenReady(playWhenReady: Boolean) {
-        if (playWhenReady && positionDisposable == null) {
+        if (playWhenReady && job1 == null) {
             enableOnProgressChanged()
-        }else if (!playWhenReady && positionDisposable != null){
+        } else if (!playWhenReady && job1 != null) {
             disableOnProgressChanged()
         }
         super.setPlayWhenReady(playWhenReady)
     }
 
-    fun selectTrackGroup(groupIndex: Int){
+    fun selectTrackGroup(groupIndex: Int) {
         trackSelector
             .currentMappedTrackInfo
             ?.getTrackGroups(C.TRACK_TYPE_AUDIO)?.let { trackGroupArray ->
-                val builder= trackSelector.parameters.buildUpon()
+                val builder = trackSelector.parameters.buildUpon()
                 val override = DefaultTrackSelector.SelectionOverride(groupIndex, 0)
                 builder.clearSelectionOverrides(C.TRACK_TYPE_AUDIO)
-                    .setRendererDisabled(C.TRACK_TYPE_AUDIO, false);
+                    .setRendererDisabled(C.TRACK_TYPE_AUDIO, false)
                 builder.setSelectionOverride(
                     C.TRACK_TYPE_AUDIO,
                     trackGroupArray,
@@ -80,35 +91,38 @@ class IndictableSimpleExoPlayer(context: Context, val trackSelector: DefaultTrac
             }
     }
 
-    fun disableAudioRenderer(){
-        val builder= trackSelector.parameters.buildUpon()
+    fun disableAudioRenderer() {
+        val builder = trackSelector.parameters.buildUpon()
         builder.clearSelectionOverrides(C.TRACK_TYPE_AUDIO)
-            .setRendererDisabled(C.TRACK_TYPE_AUDIO, true);
+            .setRendererDisabled(C.TRACK_TYPE_AUDIO, true)
         trackSelector.setParameters(builder)
     }
 
-    fun isGroupIndexSelected(groupIndex: Int): Boolean{
+    fun isGroupIndexSelected(groupIndex: Int): Boolean {
         if (!isAudioRendererEnabled()) return false
-        trackSelector.currentMappedTrackInfo?.getTrackGroups(C.TRACK_TYPE_AUDIO)?.let{trackGroupArray ->
-            trackSelector.parameters.getSelectionOverride(C.TRACK_TYPE_AUDIO, trackGroupArray)?.let {override ->
-                return override.groupIndex == groupIndex
-            }?:let {
-                for(formatIndex in 0 until trackGroupArray.get(groupIndex).length){
-                    // selectionFlag for default tracks is 0 and I don't know why =))
-                    if (trackGroupArray
-                            .get(groupIndex)
-                            .getFormat(formatIndex).selectionFlags == 0){
-                        return true
+        trackSelector.currentMappedTrackInfo?.getTrackGroups(C.TRACK_TYPE_AUDIO)
+            ?.let { trackGroupArray ->
+                trackSelector.parameters.getSelectionOverride(C.TRACK_TYPE_AUDIO, trackGroupArray)
+                    ?.let { override ->
+                        return override.groupIndex == groupIndex
+                    } ?: let {
+                    for (formatIndex in 0 until trackGroupArray.get(groupIndex).length) {
+                        // selectionFlag for default tracks is 0 and I don't know why =))
+                        if (trackGroupArray
+                                .get(groupIndex)
+                                .getFormat(formatIndex).selectionFlags == 0
+                        ) {
+                            return true
+                        }
                     }
+                    return false
                 }
-                return false
-            }
-        }?:let{
+            } ?: let {
             return false
         }
     }
 
-    fun isAudioRendererEnabled(): Boolean{
+    fun isAudioRendererEnabled(): Boolean {
         return !trackSelector.parameters.getRendererDisabled(C.TRACK_TYPE_AUDIO)
     }
 }
