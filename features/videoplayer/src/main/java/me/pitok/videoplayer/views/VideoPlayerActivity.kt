@@ -605,13 +605,7 @@ class VideoPlayerActivity :
         }
 
         state.changeSpeed?.ifNotHandled { speed ->
-            exoPlayer.setPlaybackParameters(
-                PlaybackParameters(
-                    speed,
-                    exoPlayer.playbackParameters.pitch,
-                    exoPlayer.playbackParameters.skipSilence
-                )
-            )
+            exoPlayer.playbackParameters = PlaybackParameters(speed)
         }
 
         state.changeSpeakerVolume?.ifNotHandled { speakerVolume ->
@@ -643,6 +637,14 @@ class VideoPlayerActivity :
                 is OptionMenus.SubtitleMenu -> showSubtitleMenu()
                 is OptionMenus.SpeedMenu -> showSpeedMenu()
                 is OptionMenus.AudioMenu -> showAudioMenu()
+            }
+        }
+
+        state.setName?.ifNotHandled { name ->
+            name?.let {
+                binding.playerController.videoPlayerControllerVideoName.text = it
+            } ?: let {
+                binding.playerController.videoPlayerControllerVideoName.text = ""
             }
         }
     }

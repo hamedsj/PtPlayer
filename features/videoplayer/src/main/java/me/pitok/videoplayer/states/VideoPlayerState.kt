@@ -16,6 +16,7 @@ data class VideoPlayerState(
     val showOptionsMenu: SingleEvent<OptionMenus>? = null,
     val playbackNotReady: EmptySingleEvent? = null,
     val playbackStatus: SingleEvent<PlaybackStatus>? = null,
+    val setName: SingleEvent<String?>? = null,
 ) : MviState {
 
     companion object {

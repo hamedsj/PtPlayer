@@ -31,7 +31,7 @@ ext {
             epoxy: '4.0.0-beta6',
             roundedimageview: '2.3.0',
             coil: '0.13.0',
-            exoplayer: '2.11.7',
+            exoplayer: '2.14.1',
             rxandroid: '3.0.0',
             lottie: '3.4.0',
     ]

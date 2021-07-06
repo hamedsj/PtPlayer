@@ -129,7 +129,10 @@ class VideoPlayerViewModel @Inject constructor(
                             }
                             is PlayerControllerCommand.Prepare -> {
                                 pState.update {
-                                    copy(prepare = SingleEvent(buildVideoSource()))
+                                    copy(
+                                        prepare = SingleEvent(buildVideoSource()),
+                                        setName = SingleEvent(getNameFromPath())
+                                    )
                                 }
                             }
                             is PlayerControllerCommand.ChangePlaybackSpeed -> {
@@ -212,8 +215,23 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
+    private fun getNameFromPath(): String {
+        activePath?.let { path ->
+            val pathSplit = path.split("/")
+            val nameExt = pathSplit[pathSplit.size - 1]
+            val nameExtSplit = nameExt.split(".")
+            if (nameExtSplit.size < 2) {
+                return nameExtSplit[0]
+            }
+            val mutableNameExt = mutableListOf<String>().apply { addAll(nameExtSplit) }
+            mutableNameExt.removeAt(mutableNameExt.size - 1)
+            return mutableNameExt.joinToString(".")
+        }
+        return ""
+    }
+
     private fun buildVideoSource(): MediaSource? {
-        return when(datasourcetype){
+        return when (datasourcetype) {
             VideoPlayerActivity.LOCAL_PATH_DATA_TYPE -> {
                 buildFromPath(requireNotNull(activePath))
             }
