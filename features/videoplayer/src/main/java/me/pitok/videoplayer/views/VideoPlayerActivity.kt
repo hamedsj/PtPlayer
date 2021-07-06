@@ -27,7 +27,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
-import com.google.android.exoplayer2.video.VideoListener
 import com.google.android.material.slider.Slider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -59,8 +58,7 @@ import javax.inject.Inject
 class VideoPlayerActivity :
     AppCompatActivity(),
     MviView<VideoPlayerState>,
-    Player.EventListener,
-    VideoListener {
+    Player.Listener {
 
     companion object {
         const val DATA_SOURCE_KEY = "datasource"
@@ -147,7 +145,6 @@ class VideoPlayerActivity :
             )
         }
         exoPlayer.addListener(this)
-        exoPlayer.addVideoListener(this)
         exoPlayer.onPositionChanged = { position ->
             onProgressChanged(position.toFloat())
         }
@@ -167,7 +164,7 @@ class VideoPlayerActivity :
         binding.playerController.videoPlayerControllerSeekbar.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
             if (!fromUser || !durationSet) return@OnChangeListener
             binding.playerController.videoPlayerControllerTimeLeft.text =
-                miliSecToFormatedTime(value.toLong())
+                milliSecToFormattedTime(value.toLong())
         })
     }
 
@@ -242,7 +239,7 @@ class VideoPlayerActivity :
     private fun onProgressChanged(position: Float) {
         if (sliderInTouch) return
         binding.playerController.videoPlayerControllerTimeLeft.text =
-            miliSecToFormatedTime(exoPlayer.currentPosition)
+            milliSecToFormattedTime(exoPlayer.currentPosition)
         lifecycleScope.launch {
             videoPlayerViewModel.intents.send(
                 VideoPlayerIntent.SubtitleProgressChanged(progress = exoPlayer.currentPosition)
@@ -541,18 +538,18 @@ class VideoPlayerActivity :
                     binding.playerController.videoPlayerControllerPlayIc
                         .setImageResource(R.drawable.ic_pause)
                     binding.playerController.videoPlayerControllerDuration.text =
-                        miliSecToFormatedTime(exoPlayer.duration)
+                        milliSecToFormattedTime(exoPlayer.duration)
                     binding.playerController.videoPlayerControllerTimeLeft.text =
-                        miliSecToFormatedTime(exoPlayer.currentPosition)
+                        milliSecToFormattedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.ReadyAndStopped -> {
                     endBuffering()
                     binding.playerController.videoPlayerControllerPlayIc
                         .setImageResource(R.drawable.ic_play)
                     binding.playerController.videoPlayerControllerDuration.text =
-                        miliSecToFormatedTime(exoPlayer.duration)
+                        milliSecToFormattedTime(exoPlayer.duration)
                     binding.playerController.videoPlayerControllerTimeLeft.text =
-                        miliSecToFormatedTime(exoPlayer.currentPosition)
+                        milliSecToFormattedTime(exoPlayer.currentPosition)
                 }
                 is PlaybackStatus.Ended -> {
                     endBuffering()
@@ -574,6 +571,8 @@ class VideoPlayerActivity :
                     binding.playerController.videoPlayerControllerBackClick.isEnabled = false
                     binding.playerController.videoPlayerControllerNextClick.isEnabled = false
                     binding.playerController.videoPlayerLoadingAv.visibility = View.VISIBLE
+                }
+                else -> {
                 }
             }
         }
@@ -597,7 +596,7 @@ class VideoPlayerActivity :
                         VideoPlayerIntent.SetPlayBackState(PlaybackStatus.Buffering)
                     )
                 }
-                exoPlayer.prepare(this)
+                exoPlayer.setMediaSource(this)
             } ?: apply {
                 Toast.makeText(context, "Invalid Url Path!", Toast.LENGTH_LONG).show()
                 finish()
@@ -610,9 +609,11 @@ class VideoPlayerActivity :
 
         state.changeSpeakerVolume?.ifNotHandled { speakerVolume ->
             exoPlayer.volume =
-                if (speakerVolume > 1f) 1f
-                else if (speakerVolume < 0f) 0f
-                else speakerVolume
+                when {
+                    speakerVolume > 1f -> 1f
+                    speakerVolume < 0f -> 0f
+                    else -> speakerVolume
+                }
         }
 
         state.changeOrientation?.ifNotHandled { orientation ->
@@ -1029,11 +1030,11 @@ class VideoPlayerActivity :
         }
     }
 
-    private fun miliSecToFormatedTime(miliSec: Long): String {
-        if (miliSec < 0) return "--:--"
-        val durationHourInt = (miliSec / (60 * 60 * 1000)).toInt()
-        val durationMinInt = ((miliSec % (60 * 60 * 1000)) / (60 * 1000)).toInt()
-        val durationSecInt = ((miliSec % (60 * 1000)) / 1000).toInt()
+    private fun milliSecToFormattedTime(milliSec: Long): String {
+        if (milliSec < 0) return "--:--"
+        val durationHourInt = (milliSec / (60 * 60 * 1000)).toInt()
+        val durationMinInt = ((milliSec % (60 * 60 * 1000)) / (60 * 1000)).toInt()
+        val durationSecInt = ((milliSec % (60 * 1000)) / 1000).toInt()
         val durationHourStr = if (durationHourInt < 10) "0$durationHourInt" else "$durationHourInt"
         val durationMinStr = if (durationMinInt < 10) "0$durationMinInt" else "$durationMinInt"
         val durationSecStr = if (durationSecInt < 10) "0$durationSecInt" else "$durationSecInt"
